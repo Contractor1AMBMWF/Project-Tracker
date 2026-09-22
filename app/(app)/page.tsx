@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createReadClient } from "@/lib/supabase/read";
-import { STATUS_META, type ActivityEntry, type Task } from "@/lib/types";
+import NewProjectButton from "@/components/NewProjectButton";
+import { STATUS_META, type ActivityEntry, type Project, type Task } from "@/lib/types";
 
 function timeAgo(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -25,12 +26,20 @@ const ACTION_LABEL: Record<string, string> = {
   project_deleted: "deleted project",
 };
 
+type TaskWithProject = Pick<Task, "id" | "status" | "priority" | "title" | "due_date" | "project_id">;
+
 export default async function DashboardPage() {
   const supabase = createReadClient();
 
   const [{ data: projects }, { data: tasks }, { data: activity }] = await Promise.all([
-    supabase.from("projects").select("id, name"),
-    supabase.from("tasks").select("id, status, due_date"),
+    supabase.from("projects").select("id, name, category") as unknown as Promise<{
+      data: Pick<Project, "id" | "name" | "category">[] | null;
+    }>,
+    supabase
+      .from("tasks")
+      .select("id, status, priority, title, due_date, project_id") as unknown as Promise<{
+      data: TaskWithProject[] | null;
+    }>,
     supabase
       .from("activity_log")
       .select("*")
@@ -38,13 +47,19 @@ export default async function DashboardPage() {
       .limit(30) as unknown as Promise<{ data: ActivityEntry[] | null }>,
   ]);
 
-  const taskList = (tasks ?? []) as Pick<Task, "id" | "status" | "due_date">[];
+  const taskList = tasks ?? [];
+  const projectList = projects ?? [];
+  const projectName = (id: string) => projectList.find((p) => p.id === id)?.name ?? "";
+
   const total = taskList.length;
   const done = taskList.filter((t) => t.status === "done").length;
   const overdue = taskList.filter(
     (t) => t.due_date && t.status !== "done" && new Date(t.due_date) < new Date(new Date().toDateString())
   ).length;
   const completionPct = total ? Math.round((done / total) * 100) : 0;
+
+  const stuck = taskList.filter((t) => t.status === "stuck");
+  const urgent = taskList.filter((t) => t.priority === "high" && t.status !== "done");
 
   const statusCounts = (["not_started", "working_on_it", "stuck", "done"] as const).map((s) => ({
     status: s,
@@ -54,10 +69,16 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-8 py-8">
-      <h1 className="text-2xl font-semibold text-navy">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-navy">Dashboard</h1>
+          <p className="text-sm text-slate-500">Everything the team is working on, at a glance.</p>
+        </div>
+        <NewProjectButton variant="button" categories={Array.from(new Set(projectList.map((p) => p.category).filter((c): c is string => !!c)))} />
+      </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Projects" value={(projects ?? []).length} />
+        <StatCard label="Projects" value={projectList.length} />
         <StatCard label="Total tasks" value={total} />
         <StatCard label="Completion" value={`${completionPct}%`} />
         <StatCard label="Overdue" value={overdue} accent={overdue > 0} />
@@ -110,10 +131,62 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-white p-5">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-navy">
+            <span className="h-2 w-2 rounded-full bg-red-500" />
+            Needs attention
+          </h2>
+          <p className="text-xs text-slate-400">Tasks currently marked Stuck</p>
+          <div className="mt-3 space-y-2">
+            {stuck.map((t) => (
+              <Link
+                key={t.id}
+                href={`/tasks/${t.id}`}
+                className="block rounded-md border border-slate-100 px-3 py-2 text-sm text-navy hover:border-red-300"
+              >
+                {t.title}
+                <span className="ml-2 text-xs text-slate-400">{projectName(t.project_id)}</span>
+              </Link>
+            ))}
+            {stuck.length === 0 && (
+              <p className="rounded-md border border-dashed border-slate-200 px-3 py-3 text-center text-sm text-slate-400">
+                No stuck tasks right now.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-white p-5">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-navy">
+            <span className="h-2 w-2 rounded-full bg-amber-500" />
+            Urgent
+          </h2>
+          <p className="text-xs text-slate-400">Open tasks tagged High priority</p>
+          <div className="mt-3 space-y-2">
+            {urgent.map((t) => (
+              <Link
+                key={t.id}
+                href={`/tasks/${t.id}`}
+                className="block rounded-md border border-slate-100 px-3 py-2 text-sm text-navy hover:border-amber-300"
+              >
+                {t.title}
+                <span className="ml-2 text-xs text-slate-400">{projectName(t.project_id)}</span>
+              </Link>
+            ))}
+            {urgent.length === 0 && (
+              <p className="rounded-md border border-dashed border-slate-200 px-3 py-3 text-center text-sm text-slate-400">
+                No urgent tasks right now.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="mt-8">
         <h2 className="text-sm font-semibold text-navy">Projects</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {(projects ?? []).map((p) => (
+          {projectList.map((p) => (
             <Link
               key={p.id}
               href={`/projects/${p.id}`}
@@ -139,7 +212,7 @@ function StatCard({
 }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
       <p className={`mt-1 text-2xl font-semibold ${accent ? "text-red-600" : "text-navy"}`}>
         {value}
       </p>

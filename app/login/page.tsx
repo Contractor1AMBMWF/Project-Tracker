@@ -1,4 +1,5 @@
 import { login } from "@/app/actions";
+import Logo from "@/components/Logo";
 
 export default async function LoginPage({
   searchParams,
@@ -12,8 +13,14 @@ export default async function LoginPage({
   return (
     <div className="flex min-h-screen items-center justify-center bg-navy px-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-xl">
-        <h1 className="text-xl font-semibold text-navy">Ambassador Project Tracker</h1>
-        <p className="mt-1 text-sm text-slate-500">Enter the team password to continue.</p>
+        <div className="flex items-center gap-2.5">
+          <Logo className="h-8 w-8 shrink-0" color="#E8520A" />
+          <div className="leading-tight">
+            <p className="text-base font-semibold text-navy">My Tracker</p>
+            <p className="text-xs text-slate-400">Ambassador</p>
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-slate-500">Enter the team password to continue.</p>
 
         <form action={login} className="mt-6 space-y-4">
           <input type="hidden" name="next" value={next} />

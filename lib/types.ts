@@ -6,6 +6,10 @@ export interface Project {
   name: string;
   description: string | null;
   lead_name: string | null;
+  sublead_name: string | null;
+  repo_url: string | null;
+  website_url: string | null;
+  category: string | null;
   position: number;
   created_at: string;
 }

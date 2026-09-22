@@ -1,13 +1,44 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Plus } from "lucide-react";
 import { createProject } from "@/app/actions";
 
-export default function NewProjectButton() {
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-60"
+    >
+      {pending ? "Creating..." : "Create"}
+    </button>
+  );
+}
+
+export default function NewProjectButton({
+  variant = "icon",
+  categories = [],
+}: {
+  variant?: "icon" | "button";
+  categories?: string[];
+}) {
   const [open, setOpen] = useState(false);
 
   if (!open) {
+    if (variant === "button") {
+      return (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-1.5 rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-dark"
+        >
+          <Plus size={14} />
+          New Project
+        </button>
+      );
+    }
     return (
       <button
         onClick={() => setOpen(true)}
@@ -36,6 +67,17 @@ export default function NewProjectButton() {
           placeholder="Project name"
           className="mt-3 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand"
         />
+        <input
+          name="category"
+          list="project-categories"
+          placeholder="Category (optional, e.g. Marketing)"
+          className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+        />
+        <datalist id="project-categories">
+          {categories.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
         <div className="mt-4 flex justify-end gap-2">
           <button
             type="button"
@@ -44,12 +86,7 @@ export default function NewProjectButton() {
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-dark"
-          >
-            Create
-          </button>
+          <SubmitButton />
         </div>
       </div>
     </form>

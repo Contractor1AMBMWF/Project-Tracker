@@ -13,6 +13,10 @@ create table if not exists public.projects (
   name text not null,
   description text,
   lead_name text,
+  sublead_name text,
+  repo_url text,
+  website_url text,
+  category text,
   position integer not null default 0,
   created_at timestamptz not null default now()
 );
