@@ -7,7 +7,7 @@ export default function Logo({ className = "", color = "currentColor" }: { class
       className={className}
     >
       <path
-        d="M20 4 L34 34 M20 4 L6 34 M12 20 H28 M20 4 V13"
+        d="M23 6 L34 32 M23 6 L12 32 M14 18 L23 32 M14 18 L5 32"
         stroke={color}
         strokeWidth="2"
         strokeLinecap="round"

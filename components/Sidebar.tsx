@@ -31,9 +31,9 @@ export default async function Sidebar() {
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col bg-navy text-white">
       <Link href="/" className="flex items-center gap-2.5 px-5 py-5">
-        <Logo className="h-7 w-7 shrink-0" color="#E8520A" />
+        <Logo className="h-7 w-7 shrink-0" color="#8b96ab" />
         <span className="leading-tight">
-          <span className="block text-base font-semibold text-white">My Tracker</span>
+          <span className="block text-sm font-semibold text-white">My Tracker Ambassador</span>
           <span className="block text-xs text-white/50">Ambassador</span>
         </span>
       </Link>
