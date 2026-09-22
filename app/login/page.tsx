@@ -14,7 +14,7 @@ export default async function LoginPage({
     <div className="flex min-h-screen items-center justify-center bg-navy px-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-xl">
         <div className="flex items-center gap-2.5">
-          <Logo className="h-8 w-8 shrink-0" color="#1a2740" />
+          <Logo className="h-8 w-8 shrink-0" />
           <div className="leading-tight">
             <p className="text-sm font-semibold text-navy">My Tracker Ambassador</p>
             <p className="text-[10px] uppercase tracking-wider text-slate-400">Ambassador Mid-West Floor</p>

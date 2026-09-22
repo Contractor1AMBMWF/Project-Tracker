@@ -18,7 +18,9 @@ export default async function Sidebar() {
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col bg-gradient-to-b from-navy to-navy-800">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <Logo className="h-6 w-6 shrink-0" color="#8b96ab" />
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/95 p-1">
+          <Logo className="h-full w-full" />
+        </span>
         <span className="min-w-0 leading-tight">
           <span className="block truncate font-display text-sm font-extrabold tracking-tight text-white">
             My Tracker Ambassador
