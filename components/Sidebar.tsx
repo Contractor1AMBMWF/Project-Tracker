@@ -18,11 +18,13 @@ export default async function Sidebar() {
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col bg-gradient-to-b from-navy to-navy-800">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <Logo className="h-7 w-7 shrink-0" color="#8b96ab" />
-        <span className="truncate font-display text-lg font-extrabold leading-tight tracking-tight text-white">
-          My Tracker Ambassador
-          <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            Ambassador
+        <Logo className="h-6 w-6 shrink-0" color="#8b96ab" />
+        <span className="min-w-0 leading-tight">
+          <span className="block truncate font-display text-sm font-extrabold tracking-tight text-white">
+            My Tracker Ambassador
+          </span>
+          <span className="block truncate text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            Ambassador Mid-West Floor
           </span>
         </span>
       </div>
