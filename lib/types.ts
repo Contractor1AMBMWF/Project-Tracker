@@ -5,11 +5,8 @@ export interface Project {
   id: string;
   name: string;
   description: string | null;
-  lead_name: string | null;
-  sublead_name: string | null;
   repo_url: string | null;
   website_url: string | null;
-  category: string | null;
   position: number;
   created_at: string;
 }
@@ -72,6 +69,8 @@ export const STATUS_META: Record<TaskStatus, { label: string; color: string }> =
   stuck: { label: "Stuck", color: "#ef4444" },
   done: { label: "Done", color: "#22c55e" },
 };
+
+export const STATUS_ORDER: TaskStatus[] = ["not_started", "working_on_it", "stuck", "done"];
 
 export const PRIORITY_META: Record<TaskPriority, { label: string; color: string }> = {
   low: { label: "Low", color: "#64748b" },

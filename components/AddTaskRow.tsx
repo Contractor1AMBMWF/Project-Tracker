@@ -1,33 +1,47 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { useRef, useState, useTransition } from "react";
 import { createTask } from "@/app/actions";
 
-export default function AddTaskRow({ projectId, groupId }: { projectId: string; groupId: string }) {
-  const [value, setValue] = useState("");
-  const formRef = useRef<HTMLFormElement>(null);
+export default function AddTaskRow({ groupId, projectId }: { groupId: string; projectId: string }) {
+  const [title, setTitle] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  async function submit() {
-    if (!value.trim()) return;
-    const title = value;
-    setValue("");
-    await createTask(projectId, groupId, title);
+  function add() {
+    const t = title.trim();
+    if (!t) return;
+    setTitle("");
+    inputRef.current?.focus();
+    startTransition(() => {
+      createTask(projectId, groupId, t);
+    });
   }
 
   return (
-    <form
-      ref={formRef}
-      action={submit}
-      className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400"
-    >
-      <Plus size={14} />
+    <div className="flex items-center border-t border-ink-100">
       <input
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Add a task"
-        className="flex-1 bg-transparent outline-none placeholder:text-slate-400"
+        ref={inputRef}
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            add();
+          }
+        }}
+        placeholder="+ Add task"
+        className="flex-1 bg-transparent px-4 py-2.5 text-sm text-ink-600 placeholder-ink-400 focus:outline-none"
       />
-    </form>
+      {isPending && <span className="px-2 text-xs text-ink-400">Adding…</span>}
+      {title.trim() && (
+        <button
+          onClick={add}
+          className="mr-2 rounded-md bg-brand px-3 py-1 text-xs font-semibold text-white hover:bg-brand-dark"
+        >
+          Add
+        </button>
+      )}
+    </div>
   );
 }

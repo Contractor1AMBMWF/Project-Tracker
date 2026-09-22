@@ -1,11 +1,11 @@
 import Link from "next/link";
+import { User } from "lucide-react";
 import { notFound } from "next/navigation";
 import { createReadClient } from "@/lib/supabase/read";
-import StatusPill from "@/components/StatusPill";
-import PriorityPill from "@/components/PriorityPill";
+import TaskDetailEditor from "@/components/TaskDetailEditor";
 import AddUpdateForm from "@/components/AddUpdateForm";
+import { STATUS_META, PRIORITY_META } from "@/lib/types";
 import type { Project, Task, TaskUpdate } from "@/lib/types";
-import { applyTaskPatch } from "@/app/actions";
 
 export default async function TaskPage({
   params,
@@ -31,83 +31,59 @@ export default async function TaskPage({
       .order("created_at", { ascending: false }) as unknown as Promise<{ data: TaskUpdate[] | null }>,
   ]);
 
-  async function renameTask(formData: FormData) {
-    "use server";
-    const title = String(formData.get("title") ?? "");
-    if (title.trim() && task) await applyTaskPatch(task.id, { title: title.trim() });
-  }
+  const status = STATUS_META[task.status] ?? STATUS_META.not_started;
 
   return (
-    <div className="mx-auto max-w-2xl px-8 py-8">
-      {project && (
-        <Link href={`/projects/${project.id}`} className="text-sm text-slate-500 hover:text-brand">
-          &larr; {project.name}
-        </Link>
-      )}
+    <div className="px-8 py-6">
+      <Link href={`/projects/${task.project_id}`} className="text-sm text-brand hover:underline">
+        ← {project?.name ?? "Back to project"}
+      </Link>
 
-      <form action={renameTask} className="mt-3">
-        <input
-          name="title"
-          defaultValue={task!.title}
-          onBlur={(e) => e.currentTarget.form?.requestSubmit()}
-          className="w-full bg-transparent text-2xl font-semibold text-navy outline-none"
-        />
-      </form>
-
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <StatusPill taskId={task!.id} status={task!.status} />
-        <PriorityPill taskId={task!.id} priority={task!.priority} />
+      <div className="mt-3 rounded-xl border border-ink-200 bg-white p-5">
+        <h1 className="text-xl font-bold text-navy">{task.title}</h1>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span className="rounded px-2 py-1 font-semibold text-white" style={{ background: status.color }}>
+            {status.label}
+          </span>
+          {task.priority && (
+            <span
+              className="rounded px-2 py-1 font-semibold text-white"
+              style={{ background: PRIORITY_META[task.priority].color }}
+            >
+              {PRIORITY_META[task.priority].label} priority
+            </span>
+          )}
+          <span className="flex items-center gap-1 rounded bg-ink-100 px-2 py-1 text-ink-600">
+            <User size={13} />
+            {task.assignee || "Unassigned"}
+          </span>
+          <span className="rounded bg-ink-100 px-2 py-1 text-ink-600">
+            📅 {task.due_date || "No due date"}
+          </span>
+        </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
-        <Field label="Assignee">
-          <input
-            defaultValue={task!.assignee ?? ""}
-            onBlur={(e) => applyTaskPatch(task!.id, { assignee: e.target.value || null })}
-            placeholder="Unassigned"
-            className="w-full rounded-md border border-slate-300 px-3 py-1.5 outline-none focus:border-brand"
-          />
-        </Field>
-        <Field label="Due date">
-          <input
-            type="date"
-            defaultValue={task!.due_date ?? ""}
-            onChange={(e) => applyTaskPatch(task!.id, { due_date: e.target.value || null })}
-            className="w-full rounded-md border border-slate-300 px-3 py-1.5 outline-none focus:border-brand"
-          />
-        </Field>
-      </div>
+      <TaskDetailEditor task={task} />
 
-      <div className="mt-8">
-        <h2 className="text-sm font-semibold text-navy">Updates</h2>
-        <AddUpdateForm taskId={task!.id} projectId={task!.project_id} />
+      <div className="mt-6 max-w-2xl">
+        <h2 className="mb-3 font-display text-label uppercase text-ink-500">Updates &amp; history</h2>
+        <AddUpdateForm taskId={task.id} projectId={task.project_id} />
 
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 space-y-3">
           {(updates ?? []).map((u) => (
-            <div key={u.id} className="rounded-md border border-slate-200 bg-white p-3 text-sm">
+            <div key={u.id} className="rounded-lg border border-ink-200 bg-white p-3 text-sm">
               <div className="flex items-baseline justify-between">
                 <span className="font-medium text-navy">{u.author ?? "Someone"}</span>
-                <span className="text-xs text-slate-400">
-                  {new Date(u.created_at).toLocaleString()}
-                </span>
+                <span className="text-xs text-ink-400">{new Date(u.created_at).toLocaleString()}</span>
               </div>
-              <p className="mt-1 whitespace-pre-wrap text-slate-700">{u.body}</p>
+              <p className="mt-1 whitespace-pre-wrap text-ink-700">{u.body}</p>
             </div>
           ))}
           {(!updates || updates.length === 0) && (
-            <p className="text-sm text-slate-400">No updates yet.</p>
+            <p className="text-sm text-ink-400">No updates yet.</p>
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="text-xs font-medium text-slate-500">{label}</label>
-      <div className="mt-1">{children}</div>
     </div>
   );
 }

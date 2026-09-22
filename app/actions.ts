@@ -54,7 +54,6 @@ async function logActivity(entry: {
 export async function createProject(formData: FormData) {
   await requireSession();
   const name = String(formData.get("name") ?? "").trim();
-  const category = String(formData.get("category") ?? "").trim();
   if (!name) return;
 
   const admin = createAdminClient();
@@ -64,7 +63,7 @@ export async function createProject(formData: FormData) {
 
   const { data: project, error } = await admin
     .from("projects")
-    .insert({ name, category: category || null, position: count ?? 0 })
+    .insert({ name, position: count ?? 0 })
     .select()
     .single();
   if (error || !project) return;
@@ -106,11 +105,8 @@ export async function updateProject(
   patch: Partial<{
     name: string;
     description: string;
-    lead_name: string;
-    sublead_name: string;
     repo_url: string;
     website_url: string;
-    category: string;
   }>
 ) {
   await requireSession();
