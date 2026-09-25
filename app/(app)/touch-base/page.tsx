@@ -77,15 +77,13 @@ export default async function TouchBasePage({
   const createdCount = log.filter((a) => a.action === "task_created").length;
   const updatesCount = log.filter((a) => a.action === "update_posted").length;
 
-  // Pending: everything open that is moving or blocked, plus anything due by this call or high priority.
-  const cutoffDay = period.key;
+  // Pending: everything open that is moving or blocked, plus anything high priority.
   const pendingTasks = (tasks ?? []).filter(
     (t) =>
       t.status !== "done" &&
       (t.status === "working_on_it" ||
         t.status === "stuck" ||
-        t.priority === "high" ||
-        (t.due_date !== null && t.due_date <= cutoffDay))
+        t.priority === "high")
   );
 
   const inWindow = (iso: string | null) => {
@@ -146,7 +144,7 @@ export default async function TouchBasePage({
   for (const [pid, list] of groupByProject(pendingTasks)) {
     lines.push(`${projectName.get(pid) ?? "Project"}:`);
     list.forEach((t) =>
-      lines.push(`  - ${t.title} (${STATUS_META[t.status].label}${t.assignee ? `, ${t.assignee}` : ""}${t.due_date ? `, due ${t.due_date}` : ""})`)
+      lines.push(`  - ${t.title} (${STATUS_META[t.status].label}${t.assignee ? `, ${t.assignee}` : ""})`)
     );
   }
   actionNotes.filter((n) => !n.resolved).forEach((n) => lines.push(`- ${n.body.replaceAll("**", "")}`));
@@ -257,7 +255,7 @@ export default async function TouchBasePage({
       <Card className="mt-4">
         <SectionTitle icon={<ListTodo size={17} className="text-accent-blue" />} title="Pending action items" />
         <p className="text-xs text-ink-400">
-          Open tasks that are in progress, stuck, high priority, or due by this call. Manual items carry forward until resolved.
+          Open tasks that are in progress, stuck, or high priority. Manual items carry forward until resolved.
         </p>
 
         {actionNotes.length > 0 && (
@@ -275,11 +273,9 @@ export default async function TouchBasePage({
             <div className="w-44 px-2 py-2">Project</div>
             <div className="w-32 px-2 py-2 text-center">Assignee</div>
             <div className="w-36 px-2 py-2 text-center">Status</div>
-            <div className="w-28 px-2 py-2 text-center">Due</div>
           </div>
           {pendingTasks.length === 0 && <p className="px-4 py-3 text-sm text-ink-400">No open items right now.</p>}
           {pendingTasks.map((t) => {
-            const overdue = t.due_date && t.due_date < new Date().toISOString().slice(0, 10);
             return (
               <div key={t.id} className="flex min-w-max items-center border-t border-ink-100 text-sm first:border-t-0">
                 <div className="min-w-[260px] flex-1 px-4 py-2">
@@ -300,9 +296,6 @@ export default async function TouchBasePage({
                   >
                     {STATUS_META[t.status].label}
                   </span>
-                </div>
-                <div className={`w-28 px-2 py-2 text-center text-xs ${overdue ? "font-semibold text-red-500" : "text-ink-600"}`}>
-                  {t.due_date || "-"}
                 </div>
               </div>
             );

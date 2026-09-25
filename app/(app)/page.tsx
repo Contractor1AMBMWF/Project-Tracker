@@ -51,8 +51,7 @@ export default async function DashboardPage() {
   const done = countBy("done");
   const completion = total === 0 ? 0 : Math.round((done / total) * 100);
 
-  const today = new Date().toISOString().slice(0, 10);
-  const overdue = tasks.filter((t) => t.due_date && t.due_date < today && t.status !== "done").length;
+  const inProgress = tasks.filter((t) => t.status === "working_on_it").length;
 
   const projectById = new Map((projects ?? []).map((p) => [p.id, p]));
   const stuckTasks = tasks.filter((t) => t.status === "stuck");
@@ -95,7 +94,7 @@ export default async function DashboardPage() {
         <StatCard label="Projects" value={projects?.length ?? 0} />
         <StatCard label="Total tasks" value={total} />
         <StatCard label="Completion" value={`${completion}%`} accent />
-        <StatCard label="Overdue" value={overdue} danger={overdue > 0} />
+        <StatCard label="In progress" value={inProgress} />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">

@@ -57,9 +57,6 @@ export default async function TaskPage({
             <User size={13} />
             {task.assignee || "Unassigned"}
           </span>
-          <span className="rounded bg-ink-100 px-2 py-1 text-ink-600">
-            📅 {task.due_date || "No due date"}
-          </span>
         </div>
       </div>
 

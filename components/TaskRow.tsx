@@ -14,7 +14,7 @@ import {
   type TaskStatus,
 } from "@/lib/types";
 
-const COLS = { assignee: 144, status: 176, priority: 112, due_date: 144, actions: 80 };
+const COLS = { assignee: 144, status: 176, priority: 112, actions: 80 };
 
 function AutoTextarea({
   value,
@@ -69,15 +69,13 @@ export default function TaskRow({
   const [assignee, setAssignee] = useState(task.assignee ?? "");
   const [statusVal, setStatusVal] = useState<TaskStatus>(task.status);
   const [priority, setPriority] = useState<string>(task.priority ?? "");
-  const [dueDate, setDueDate] = useState(task.due_date ?? "");
   const [deleted, setDeleted] = useState(false);
 
   const dirty =
     title.trim() !== task.title ||
     assignee !== (task.assignee ?? "") ||
     statusVal !== task.status ||
-    priority !== (task.priority ?? "") ||
-    dueDate !== (task.due_date ?? "");
+    priority !== (task.priority ?? "");
 
   function saveAll() {
     if (!dirty) return;
@@ -87,7 +85,6 @@ export default function TaskRow({
         assignee: assignee || null,
         status: statusVal,
         priority: (priority || null) as TaskPriority | null,
-        due_date: dueDate || null,
       });
     });
   }
@@ -177,16 +174,6 @@ export default function TaskRow({
           </select>
         </div>
 
-        {/* Due date */}
-        <div className="shrink-0 px-2 py-1 text-center" style={{ width: COLS.due_date }}>
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            onBlur={saveAll}
-            className="w-full cursor-pointer rounded bg-transparent px-1 py-1 text-xs text-ink-600 focus:outline-none"
-          />
-        </div>
 
         {/* Save + Delete */}
         <div className="shrink-0 flex items-center justify-end gap-1 px-2 py-2" style={{ width: COLS.actions }}>

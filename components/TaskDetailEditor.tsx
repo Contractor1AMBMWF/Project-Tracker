@@ -10,7 +10,6 @@ export default function TaskDetailEditor({ task }: { task: Task }) {
   const [assignee, setAssignee] = useState(task.assignee ?? "");
   const [status, setStatus] = useState<TaskStatus>(task.status);
   const [priority, setPriority] = useState<string>(task.priority ?? "");
-  const [dueDate, setDueDate] = useState(task.due_date ?? "");
 
   function patch(next: Partial<{ title: string; assignee: string | null; status: TaskStatus; priority: TaskPriority | null; due_date: string | null }>) {
     applyTaskPatch(task.id, next);
@@ -27,7 +26,7 @@ export default function TaskDetailEditor({ task }: { task: Task }) {
         className="mt-2 w-full rounded-lg border border-ink-300 px-3 py-2 text-sm font-medium text-navy focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
       />
 
-      <div className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
         <div>
           <FieldLabel>Assignee</FieldLabel>
           <input
@@ -76,18 +75,6 @@ export default function TaskDetailEditor({ task }: { task: Task }) {
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <FieldLabel>Due date</FieldLabel>
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => {
-              setDueDate(e.target.value);
-              patch({ due_date: e.target.value || null });
-            }}
-            className="mt-1 w-full rounded-lg border border-ink-300 px-2 py-1.5 text-ink-700 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
-          />
         </div>
       </div>
     </div>

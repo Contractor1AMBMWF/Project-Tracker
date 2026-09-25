@@ -119,7 +119,6 @@ export default function Board({
                   <div className="w-36 px-2 py-2 text-center">Assignee</div>
                   <div className="w-44 px-2 py-2 text-center">Status</div>
                   <div className="w-28 px-2 py-2 text-center">Priority</div>
-                  <div className="w-36 px-2 py-2 text-center">Due date</div>
                   <div className="w-20 px-2 py-2" />
                 </div>
 
