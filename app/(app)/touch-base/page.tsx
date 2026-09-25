@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 interface Note {
   id: string;
   period_key: string;
-  kind: "done" | "action" | "info";
+  kind: "done" | "action" | "info" | "answer";
   body: string;
   audience: string | null;
   project_id: string | null;
@@ -98,6 +98,16 @@ export default async function TouchBasePage({
   const doneNotes = notes.filter((n) => n.kind === "done" && n.period_key === period.key);
   const actionNotes = notes.filter((n) => n.kind === "action" && carried(n));
   const infoNotes = notes.filter((n) => n.kind === "info" && carried(n));
+  const answersFor = (id: string) =>
+    notes
+      .filter((n) => n.kind === "answer" && n.period_key === id)
+      .map((n) => ({
+        id: n.id,
+        body: n.body,
+        meta: [n.author, new Date(n.created_at).toLocaleDateString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric" })]
+          .filter(Boolean)
+          .join(" · "),
+      }));
 
   const groupByProject = (list: Task[]) => {
     const map = new Map<string, Task[]>();
@@ -130,7 +140,7 @@ export default async function TouchBasePage({
       items.forEach((t) => lines.push(`    - ${t.title}`));
     }
   }
-  doneNotes.forEach((n) => lines.push(`- ${n.body}`));
+  doneNotes.forEach((n) => lines.push(`- ${n.body.replaceAll("**", "")}`));
   if (doneTasks.length === 0 && doneNotes.length === 0) lines.push("- Nothing logged yet");
   lines.push("", "PENDING ACTION ITEMS");
   for (const [pid, list] of groupByProject(pendingTasks)) {
@@ -139,12 +149,15 @@ export default async function TouchBasePage({
       lines.push(`  - ${t.title} (${STATUS_META[t.status].label}${t.assignee ? `, ${t.assignee}` : ""}${t.due_date ? `, due ${t.due_date}` : ""})`)
     );
   }
-  actionNotes.filter((n) => !n.resolved).forEach((n) => lines.push(`- ${n.body}`));
+  actionNotes.filter((n) => !n.resolved).forEach((n) => lines.push(`- ${n.body.replaceAll("**", "")}`));
   lines.push("", "INFO NEEDED");
   const openInfo = infoNotes.filter((n) => !n.resolved);
   for (const [pid, list] of notesByProject(openInfo)) {
     lines.push(`${pid ? projectName.get(pid) ?? "Project" : "General"}:`);
-    list.forEach((n) => lines.push(`  - ${n.audience ? `[${n.audience}] ` : ""}${n.body}`));
+    list.forEach((n) => {
+      lines.push(`  - ${n.audience ? `[${n.audience}] ` : ""}${n.body.replaceAll("**", "")}`);
+      answersFor(n.id).forEach((a) => lines.push(`      Answer (${a.meta}): ${a.body.replaceAll("**", "")}`));
+    });
   }
   if (openInfo.length === 0) lines.push("- None");
 
@@ -230,6 +243,7 @@ export default async function TouchBasePage({
                       body={n.body}
                       meta={[n.audience ? `For ${n.audience}` : null, `added ${n.period_key}`].filter(Boolean).join(" · ")}
                       resolved={n.resolved}
+                      answers={answersFor(n.id)}
                     />
                   ))}
                 </div>

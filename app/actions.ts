@@ -324,6 +324,18 @@ export async function addTouchBaseNote(input: {
   revalidatePath("/touch-base");
 }
 
+// An answer is a touch_base_notes row of kind "answer" whose period_key holds
+// the id of the info item it answers, so replies need no extra table.
+export async function addTouchBaseAnswer(noteId: string, body: string) {
+  await requireSession();
+  const text = body.trim();
+  if (!text) return;
+  const author = await getActorName();
+  const admin = createAdminClient();
+  await admin.from("touch_base_notes").insert({ period_key: noteId, kind: "answer", body: text, author });
+  revalidatePath("/touch-base");
+}
+
 export async function setTouchBaseNoteResolved(id: string, resolved: boolean) {
   await requireSession();
   const admin = createAdminClient();

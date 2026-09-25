@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Trash2, Undo2 } from "lucide-react";
-import { addTouchBaseNote, deleteTouchBaseNote, setTouchBaseNoteResolved } from "@/app/actions";
+import { Check, Copy, MessageSquare, Trash2, Undo2 } from "lucide-react";
+import { addTouchBaseAnswer, addTouchBaseNote, deleteTouchBaseNote, setTouchBaseNoteResolved } from "@/app/actions";
 import { Button } from "@/components/ui/Button";
 
 export function PeriodPicker({
@@ -90,16 +90,28 @@ export function NoteRow({
   meta,
   resolved,
   resolvable = true,
+  answers,
 }: {
   id: string;
   body: string;
   meta?: string;
   resolved: boolean;
   resolvable?: boolean;
+  answers?: { id: string; body: string; meta: string }[];
 }) {
   const [, startTransition] = useTransition();
+  const [answering, setAnswering] = useState(false);
+  const [reply, setReply] = useState("");
+  function saveReply() {
+    const text = reply.trim();
+    if (!text) return;
+    setReply("");
+    setAnswering(false);
+    startTransition(() => addTouchBaseAnswer(id, text));
+  }
   return (
-    <div className="group flex items-start gap-2 rounded-lg border border-ink-200 bg-ink-50 px-3 py-2 text-sm">
+    <div className="rounded-lg border border-ink-200 bg-ink-50">
+    <div className="group flex items-start gap-2 px-3 py-2 text-sm">
       {resolvable && (
         <button
           onClick={() => startTransition(() => setTouchBaseNoteResolved(id, !resolved))}
@@ -112,7 +124,9 @@ export function NoteRow({
         </button>
       )}
       <div className="min-w-0 flex-1">
-        <p className={`whitespace-pre-wrap ${resolved ? "text-ink-400 line-through" : "text-ink-700"}`}>{body}</p>
+        <p className={`whitespace-pre-wrap ${resolved ? "text-ink-400 line-through" : "text-ink-700"}`}>
+          <Rich text={body} />
+        </p>
         {meta && <p className="text-xs text-ink-400">{meta}</p>}
       </div>
       {resolved && resolvable && (
@@ -134,6 +148,79 @@ export function NoteRow({
         <Trash2 size={13} />
       </button>
     </div>
+    {answers && (
+      <div className="space-y-1.5 px-3 pb-2 pl-9">
+        {answers.map((a) => (
+          <div key={a.id} className="group flex items-start gap-2 rounded-md border-l-2 border-brand bg-white px-2.5 py-1.5 text-sm">
+            <div className="min-w-0 flex-1">
+              <p className="whitespace-pre-wrap text-ink-700">
+                <Rich text={a.body} />
+              </p>
+              <p className="text-xs text-ink-400">{a.meta}</p>
+            </div>
+            <button
+              onClick={() => {
+                if (confirm("Delete this answer?")) startTransition(() => deleteTouchBaseNote(a.id));
+              }}
+              title="Delete answer"
+              className="rounded p-1 text-ink-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        ))}
+        {answering ? (
+          <div className="space-y-1.5">
+            <textarea
+              autoFocus
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) saveReply();
+                if (e.key === "Escape") setAnswering(false);
+              }}
+              rows={3}
+              placeholder="Type the answer"
+              className="w-full rounded-lg border border-ink-300 bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={saveReply} disabled={!reply.trim()}>
+                Save answer
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setAnswering(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setAnswering(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-ink-500 hover:text-brand"
+          >
+            <MessageSquare size={13} />
+            Answer
+          </button>
+        )}
+      </div>
+    )}
+    </div>
+  );
+}
+
+// Notes are plain text; **double asterisks** mark the part to read first.
+function Rich({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+        i % 2 ? (
+          <strong key={i} className="font-semibold text-ink-900">
+            {part}
+          </strong>
+        ) : (
+          part
+        )
+      )}
+    </>
   );
 }
 
