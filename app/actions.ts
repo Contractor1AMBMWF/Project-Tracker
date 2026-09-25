@@ -300,3 +300,43 @@ export async function addTaskUpdate(taskId: string, projectId: string, body: str
 
   revalidatePath(`/tasks/${taskId}`);
 }
+
+// ---------- touch base notes ----------
+
+export async function addTouchBaseNote(input: {
+  periodKey: string;
+  kind: "done" | "action" | "info";
+  body: string;
+  audience?: string | null;
+}) {
+  await requireSession();
+  const body = input.body.trim();
+  if (!body) return;
+  const author = await getActorName();
+  const admin = createAdminClient();
+  await admin.from("touch_base_notes").insert({
+    period_key: input.periodKey,
+    kind: input.kind,
+    body,
+    audience: input.audience || null,
+    author,
+  });
+  revalidatePath("/touch-base");
+}
+
+export async function setTouchBaseNoteResolved(id: string, resolved: boolean) {
+  await requireSession();
+  const admin = createAdminClient();
+  await admin
+    .from("touch_base_notes")
+    .update({ resolved, resolved_at: resolved ? new Date().toISOString() : null })
+    .eq("id", id);
+  revalidatePath("/touch-base");
+}
+
+export async function deleteTouchBaseNote(id: string) {
+  await requireSession();
+  const admin = createAdminClient();
+  await admin.from("touch_base_notes").delete().eq("id", id);
+  revalidatePath("/touch-base");
+}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, type LucideIcon } from "lucide-react";
+import { CalendarCheck, LayoutDashboard, type LucideIcon } from "lucide-react";
 import type { Project } from "@/lib/types";
 
 export default function SidebarNav({ projects }: { projects: Project[] }) {
@@ -34,7 +34,10 @@ export default function SidebarNav({ projects }: { projects: Project[] }) {
 
   return (
     <>
-      <nav className="space-y-0.5 px-3">{navItem("/", "Dashboard", LayoutDashboard)}</nav>
+      <nav className="space-y-0.5 px-3">
+        {navItem("/", "Dashboard", LayoutDashboard)}
+        {navItem("/touch-base", "Touch Base", CalendarCheck)}
+      </nav>
 
       <div className="mt-5 flex-1 overflow-y-auto px-3">
         <div className="mb-1.5 px-2 font-display text-label uppercase tracking-wider text-slate-500">
