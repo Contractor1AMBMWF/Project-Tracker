@@ -15,6 +15,7 @@ interface Note {
   kind: "done" | "action" | "info";
   body: string;
   audience: string | null;
+  project_id: string | null;
   resolved: boolean;
   resolved_at: string | null;
   author: string | null;
@@ -108,6 +109,17 @@ export default async function TouchBasePage({
     return [...map.entries()];
   };
 
+  // Notes grouped by project in sidebar order; untagged notes go last as "General".
+  const notesByProject = (list: Note[]) => {
+    const order = new Map((projects ?? []).map((p, i) => [p.id, i]));
+    const map = new Map<string | null, Note[]>();
+    for (const n of list) {
+      if (!map.has(n.project_id)) map.set(n.project_id, []);
+      map.get(n.project_id)!.push(n);
+    }
+    return [...map.entries()].sort(([a], [b]) => (a ? order.get(a) ?? 99 : 100) - (b ? order.get(b) ?? 99 : 100));
+  };
+
   const lines: string[] = [];
   lines.push(`${period.label} (${period.range})`, "");
   lines.push("DONE");
@@ -130,7 +142,10 @@ export default async function TouchBasePage({
   actionNotes.filter((n) => !n.resolved).forEach((n) => lines.push(`- ${n.body}`));
   lines.push("", "INFO NEEDED");
   const openInfo = infoNotes.filter((n) => !n.resolved);
-  openInfo.forEach((n) => lines.push(`- ${n.audience ? `[${n.audience}] ` : ""}${n.body}`));
+  for (const [pid, list] of notesByProject(openInfo)) {
+    lines.push(`${pid ? projectName.get(pid) ?? "Project" : "General"}:`);
+    list.forEach((n) => lines.push(`  - ${n.audience ? `[${n.audience}] ` : ""}${n.body}`));
+  }
   if (openInfo.length === 0) lines.push("- None");
 
   return (
@@ -204,14 +219,25 @@ export default async function TouchBasePage({
           <p className="text-xs text-ink-400">Stays on every call until marked resolved.</p>
           <div className="mt-3 space-y-1.5">
             {infoNotes.length === 0 && <p className="text-xs italic text-ink-400">Nothing waiting on them right now.</p>}
-            {infoNotes.map((n) => (
-              <NoteRow
-                key={n.id}
-                id={n.id}
-                body={n.body}
-                meta={[n.audience ? `For ${n.audience}` : null, `added ${n.period_key}`].filter(Boolean).join(" · ")}
-                resolved={n.resolved}
-              />
+            {notesByProject(infoNotes).map(([pid, list]) => (
+              <div key={pid ?? "general"} className="space-y-1.5 pt-1">
+                {pid ? (
+                  <Link href={`/projects/${pid}`} className="font-display text-sm font-bold text-ink-900 hover:text-brand">
+                    {projectName.get(pid) ?? "Project"}
+                  </Link>
+                ) : (
+                  <p className="font-display text-sm font-bold text-ink-900">General</p>
+                )}
+                {list.map((n) => (
+                  <NoteRow
+                    key={n.id}
+                    id={n.id}
+                    body={n.body}
+                    meta={[n.audience ? `For ${n.audience}` : null, `added ${n.period_key}`].filter(Boolean).join(" · ")}
+                    resolved={n.resolved}
+                  />
+                ))}
+              </div>
             ))}
           </div>
           <NoteForm periodKey={period.key} kind="info" placeholder="What do you need from them?" withAudience />
