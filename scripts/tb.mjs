@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Log Touch Base items from the terminal, straight into Supabase.
 //
-//   node scripts/tb.mjs done   "Shipped the RFMS prospect form" [--project "Builder CRM"]
+//   node scripts/tb.mjs done   "Shipped the RFMS prospect form" --project "Builder CRM" --section "RFMS Integration"
+//     (with --section it becomes a done subtask under that main task on the board,
+//      creating the section if needed; without it, a loose "other work" note)
 //   node scripts/tb.mjs info   "Which RFMS store do new prospects go to?" --for RJ
 //   node scripts/tb.mjs action "Walk Matt through the new journey board"
 //   node scripts/tb.mjs list   [--period 2026-09-29]
@@ -103,6 +105,41 @@ if (flags.project) {
     process.exit(1);
   }
   project_id = data.id;
+}
+
+if (cmd === "done" && flags.section) {
+  if (!project_id) {
+    console.error("--section needs --project");
+    process.exit(1);
+  }
+  let { data: group } = await db.from("groups").select("id").eq("project_id", project_id).ilike("name", flags.section).maybeSingle();
+  if (!group) {
+    const { count } = await db.from("groups").select("id", { count: "exact", head: true }).eq("project_id", project_id);
+    ({ data: group } = await db
+      .from("groups")
+      .insert({ project_id, name: flags.section, color: "#E8520A", position: count ?? 0 })
+      .select("id")
+      .single());
+  }
+  const { data: existing } = await db.from("tasks").select("title").eq("group_id", group.id);
+  if (existing.some((t) => t.title === body)) {
+    console.log(`Already on the board: ${body}`);
+    process.exit(0);
+  }
+  const now = new Date().toISOString();
+  const { data: task, error } = await db
+    .from("tasks")
+    .insert({ project_id, group_id: group.id, title: body, status: "done", priority: "medium", assignee: "Mela", completed_at: now, position: existing.length })
+    .select("id")
+    .single();
+  if (error) throw error;
+  const entry = { actor_name: "Mela", project_id, project_name: flags.project, task_id: task.id, task_title: body };
+  await db.from("activity_log").insert([
+    { ...entry, action: "task_created" },
+    { ...entry, action: "completed", detail: "not_started → done" },
+  ]);
+  console.log(`Added done subtask under ${flags.section}: ${body}`);
+  process.exit(0);
 }
 
 const { data: dupe } = await db
