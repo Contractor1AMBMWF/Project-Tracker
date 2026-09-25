@@ -3,6 +3,7 @@ import { getActorName } from "@/lib/auth";
 import { signOut } from "@/app/actions";
 import SidebarNav from "@/components/SidebarNav";
 import Logo from "@/components/Logo";
+import ResizableSidebar from "@/components/ResizableSidebar";
 import type { Project } from "@/lib/types";
 
 export default async function Sidebar() {
@@ -16,7 +17,8 @@ export default async function Sidebar() {
   ]);
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col bg-gradient-to-b from-navy to-navy-800">
+    <ResizableSidebar>
+    <aside className="flex h-full w-full flex-col bg-gradient-to-b from-navy to-navy-800">
       <div className="flex items-center gap-2.5 px-5 py-5">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/95 p-1">
           <Logo className="h-full w-full" />
@@ -47,5 +49,6 @@ export default async function Sidebar() {
         </div>
       </div>
     </aside>
+    </ResizableSidebar>
   );
 }
