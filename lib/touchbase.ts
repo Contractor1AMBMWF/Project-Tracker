@@ -1,8 +1,8 @@
 // Touch Base calls happen Tuesday and Friday. Each period runs from the
-// previous call to this one, with the cut-off at 12:00 PM Central Time so
-// work done the morning of the call still lands in that call's summary.
+// previous call to this one, with the cut-off at the 2:00 PM Central call time so
+// work done right up to the call lands in that call's summary.
 const TZ = "America/Chicago";
-const CUTOFF_HOUR = 12;
+const CUTOFF_HOUR = 14;
 const MEETING_DAYS = [2, 5]; // Tue, Fri
 
 export interface TouchBasePeriod {
@@ -72,7 +72,7 @@ export function periodFor(key: string): TouchBasePeriod {
     start: cutoff(prev),
     end: cutoff(key),
     label: `${fmtDay(key)} touch base`,
-    range: `${fmtDay(prev)} 12 PM to ${fmtDay(key)} 12 PM CT`,
+    range: `${fmtDay(prev)} 2 PM to ${fmtDay(key)} 2 PM CT`,
   };
 }
 
