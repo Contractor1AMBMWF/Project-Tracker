@@ -5,6 +5,7 @@
 //   node scripts/tb.mjs info   "Which RFMS store do new prospects go to?" --for RJ
 //   node scripts/tb.mjs action "Walk Matt through the new journey board"
 //   node scripts/tb.mjs list   [--period 2026-09-29]
+//   node scripts/tb.mjs edit   "start of the old text" "new text"
 //
 // Items land in the upcoming call (the next Tue/Fri 2 PM CT) unless --period
 // is given. An identical item already in that period is skipped, so re-running
@@ -58,6 +59,20 @@ for (let i = 0; i < rest.length; i++) {
 }
 const body = words.join(" ").trim();
 const period = flags.period || currentKey();
+
+if (cmd === "edit") {
+  const [from, to] = words;
+  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+  const { data } = await db.from("touch_base_notes").select("id").like("body", `${from.replace(/[%_]/g, "\\$&")}%`);
+  if (data?.length !== 1) {
+    console.error(`Expected one item starting with "${from}", found ${data?.length ?? 0}`);
+    process.exit(1);
+  }
+  const { error } = await db.from("touch_base_notes").update({ body: to.trim() }).eq("id", data[0].id);
+  if (error) throw error;
+  console.log(`Updated: ${to.trim()}`);
+  process.exit(0);
+}
 
 if (!["done", "info", "action", "list"].includes(cmd) || (cmd !== "list" && !body)) {
   console.error('Usage: tb.mjs done|info|action "text" [--project NAME] [--for RJ|Matt|Both] [--period YYYY-MM-DD]\n       tb.mjs list [--period YYYY-MM-DD]');

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, ListTodo, HelpCircle } from "lucide-react";
+import { CheckCircle2, ChevronRight, ListTodo, HelpCircle } from "lucide-react";
 import { createReadClient } from "@/lib/supabase/read";
 import { Card, FieldLabel, PageHeader } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Badge";
@@ -176,41 +176,42 @@ export default async function TouchBasePage({
           {doneTasks.length === 0 && doneNotes.length === 0 && (
             <p className="mt-3 text-xs italic text-ink-400">No tasks completed in this period yet.</p>
           )}
-          <div className="mt-3 space-y-4">
-            {groupByProject(doneTasks).map(([pid, list]) => (
-              <div key={pid}>
-                <Link href={`/projects/${pid}`} className="font-display text-sm font-bold text-ink-900 hover:text-brand">
-                  {projectName.get(pid) ?? "Project"}
-                </Link>
-                {bySection(list).map(([gid, items]) => (
-                  <div key={gid} className="mt-2">
-                    <FieldLabel>{groupById.get(gid)?.name ?? "Tasks"}</FieldLabel>
-                    <ul className="mt-1 space-y-1">
-                      {items.map((t) => (
-                        <li key={t.id} className="flex items-start gap-2 text-sm text-ink-700">
-                          <span className="mt-1.5">
-                            <Dot color={STATUS_META.done.color} />
-                          </span>
-                          <Link href={`/tasks/${t.id}`} className="hover:text-brand">
-                            {t.title}
-                          </Link>
-                          {t.assignee && <span className="ml-auto shrink-0 text-xs text-ink-400">{t.assignee}</span>}
-                        </li>
+          <div className="mt-3 space-y-2">
+            {[...new Set<string | null>([...groupByProject(doneTasks).map(([pid]) => pid), ...notesByProject(doneNotes).map(([pid]) => pid)])].map((pid) => {
+              const tasksHere = doneTasks.filter((t) => t.project_id === pid);
+              const notesHere = doneNotes.filter((n) => n.project_id === pid);
+              return (
+                <ProjectFold key={pid ?? "general"} name={pid ? projectName.get(pid) ?? "Project" : "General"} count={tasksHere.length + notesHere.length}>
+                  {bySection(tasksHere).map(([gid, items]) => (
+                    <div key={gid} className="mt-2">
+                      <FieldLabel>{groupById.get(gid)?.name ?? "Tasks"}</FieldLabel>
+                      <ul className="mt-1 space-y-1">
+                        {items.map((t) => (
+                          <li key={t.id} className="flex items-start gap-2 text-sm text-ink-700">
+                            <span className="mt-1.5">
+                              <Dot color={STATUS_META.done.color} />
+                            </span>
+                            <Link href={`/tasks/${t.id}`} className="hover:text-brand">
+                              {t.title}
+                            </Link>
+                            {t.assignee && <span className="ml-auto shrink-0 text-xs text-ink-400">{t.assignee}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                  {notesHere.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      {tasksHere.length > 0 && <FieldLabel>Other work</FieldLabel>}
+                      {notesHere.map((n) => (
+                        <NoteRow key={n.id} id={n.id} body={n.body} meta={n.author ?? undefined} resolved={false} resolvable={false} />
                       ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            ))}
+                    </div>
+                  )}
+                </ProjectFold>
+              );
+            })}
           </div>
-          {doneNotes.length > 0 && (
-            <div className="mt-4 space-y-1.5">
-              <FieldLabel>Other work</FieldLabel>
-              {doneNotes.map((n) => (
-                <NoteRow key={n.id} id={n.id} body={n.body} meta={n.author ?? undefined} resolved={false} resolvable={false} />
-              ))}
-            </div>
-          )}
           <NoteForm periodKey={period.key} kind="done" placeholder="Add other work done (meetings, research, fixes outside the board)" />
         </Card>
 
@@ -220,24 +221,19 @@ export default async function TouchBasePage({
           <div className="mt-3 space-y-1.5">
             {infoNotes.length === 0 && <p className="text-xs italic text-ink-400">Nothing waiting on them right now.</p>}
             {notesByProject(infoNotes).map(([pid, list]) => (
-              <div key={pid ?? "general"} className="space-y-1.5 pt-1">
-                {pid ? (
-                  <Link href={`/projects/${pid}`} className="font-display text-sm font-bold text-ink-900 hover:text-brand">
-                    {projectName.get(pid) ?? "Project"}
-                  </Link>
-                ) : (
-                  <p className="font-display text-sm font-bold text-ink-900">General</p>
-                )}
-                {list.map((n) => (
-                  <NoteRow
-                    key={n.id}
-                    id={n.id}
-                    body={n.body}
-                    meta={[n.audience ? `For ${n.audience}` : null, `added ${n.period_key}`].filter(Boolean).join(" · ")}
-                    resolved={n.resolved}
-                  />
-                ))}
-              </div>
+              <ProjectFold key={pid ?? "general"} name={pid ? projectName.get(pid) ?? "Project" : "General"} count={list.filter((n) => !n.resolved).length}>
+                <div className="mt-2 space-y-1.5">
+                  {list.map((n) => (
+                    <NoteRow
+                      key={n.id}
+                      id={n.id}
+                      body={n.body}
+                      meta={[n.audience ? `For ${n.audience}` : null, `added ${n.period_key}`].filter(Boolean).join(" · ")}
+                      resolved={n.resolved}
+                    />
+                  ))}
+                </div>
+              </ProjectFold>
             ))}
           </div>
           <NoteForm periodKey={period.key} kind="info" placeholder="What do you need from them?" withAudience />
@@ -324,5 +320,19 @@ function Stat({ label, value, accent, danger }: { label: string; value: number; 
         {value}
       </p>
     </Card>
+  );
+}
+
+// One project's items, folded away until opened so each call starts as a short list.
+function ProjectFold({ name, count, children }: { name: string; count: number; children: React.ReactNode }) {
+  return (
+    <details className="group rounded-lg border border-ink-100 px-3 py-2">
+      <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+        <ChevronRight size={15} className="text-ink-400 transition-transform group-open:rotate-90" />
+        <span className="font-display text-sm font-bold text-ink-900">{name}</span>
+        <span className="ml-auto text-xs text-ink-400">{count}</span>
+      </summary>
+      <div className="pb-1">{children}</div>
+    </details>
   );
 }
