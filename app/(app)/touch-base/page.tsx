@@ -5,7 +5,7 @@ import { Card, FieldLabel, PageHeader } from "@/components/ui/Card";
 import { Dot } from "@/components/ui/Badge";
 import { CopySummaryButton, NoteForm, NoteRow, PeriodPicker } from "@/components/TouchBaseClient";
 import { currentPeriod, isMeetingKey, periodFor, recentPeriods } from "@/lib/touchbase";
-import { STATUS_META, type ActivityEntry, type Project, type Task } from "@/lib/types";
+import { STATUS_META, type ActivityEntry, type Group, type Project, type Task } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +32,9 @@ export default async function TouchBasePage({
   if (!periods.some((p) => p.key === period.key)) periods.push(period);
 
   const supabase = createReadClient();
-  const [{ data: projects }, { data: tasks }, { data: activity }, { data: notesData }] = await Promise.all([
+  const [{ data: projects }, { data: groupsData }, { data: tasks }, { data: activity }, { data: notesData }] = await Promise.all([
     supabase.from("projects").select("*").order("position") as unknown as Promise<{ data: Project[] | null }>,
+    supabase.from("groups").select("*").order("position") as unknown as Promise<{ data: Group[] | null }>,
     supabase.from("tasks").select("*") as unknown as Promise<{ data: Task[] | null }>,
     supabase
       .from("activity_log")
@@ -45,6 +46,18 @@ export default async function TouchBasePage({
   ]);
 
   const projectName = new Map((projects ?? []).map((p) => [p.id, p.name]));
+  const groupById = new Map((groupsData ?? []).map((g) => [g.id, g]));
+  // Sections within a project, in board order.
+  const bySection = (list: Task[]) => {
+    const map = new Map<string, Task[]>();
+    for (const t of list) {
+      if (!map.has(t.group_id)) map.set(t.group_id, []);
+      map.get(t.group_id)!.push(t);
+    }
+    return [...map.entries()].sort(
+      ([a], [b]) => (groupById.get(a)?.position ?? 0) - (groupById.get(b)?.position ?? 0)
+    );
+  };
   const taskById = new Map((tasks ?? []).map((t) => [t.id, t]));
   const notes = notesData ?? [];
   const log = activity ?? [];
@@ -100,7 +113,10 @@ export default async function TouchBasePage({
   lines.push("DONE");
   for (const [pid, list] of groupByProject(doneTasks)) {
     lines.push(`${projectName.get(pid) ?? "Project"}:`);
-    list.forEach((t) => lines.push(`  - ${t.title}`));
+    for (const [gid, items] of bySection(list)) {
+      lines.push(`  ${groupById.get(gid)?.name ?? "Tasks"}:`);
+      items.forEach((t) => lines.push(`    - ${t.title}`));
+    }
   }
   doneNotes.forEach((n) => lines.push(`- ${n.body}`));
   if (doneTasks.length === 0 && doneNotes.length === 0) lines.push("- Nothing logged yet");
@@ -151,19 +167,24 @@ export default async function TouchBasePage({
                 <Link href={`/projects/${pid}`} className="font-display text-sm font-bold text-ink-900 hover:text-brand">
                   {projectName.get(pid) ?? "Project"}
                 </Link>
-                <ul className="mt-1 space-y-1">
-                  {list.map((t) => (
-                    <li key={t.id} className="flex items-start gap-2 text-sm text-ink-700">
-                      <span className="mt-1.5">
-                        <Dot color={STATUS_META.done.color} />
-                      </span>
-                      <Link href={`/tasks/${t.id}`} className="hover:text-brand">
-                        {t.title}
-                      </Link>
-                      {t.assignee && <span className="ml-auto shrink-0 text-xs text-ink-400">{t.assignee}</span>}
-                    </li>
-                  ))}
-                </ul>
+                {bySection(list).map(([gid, items]) => (
+                  <div key={gid} className="mt-2">
+                    <FieldLabel>{groupById.get(gid)?.name ?? "Tasks"}</FieldLabel>
+                    <ul className="mt-1 space-y-1">
+                      {items.map((t) => (
+                        <li key={t.id} className="flex items-start gap-2 text-sm text-ink-700">
+                          <span className="mt-1.5">
+                            <Dot color={STATUS_META.done.color} />
+                          </span>
+                          <Link href={`/tasks/${t.id}`} className="hover:text-brand">
+                            {t.title}
+                          </Link>
+                          {t.assignee && <span className="ml-auto shrink-0 text-xs text-ink-400">{t.assignee}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
