@@ -2,37 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import {
-  checkPassword,
-  clearSessionCookie,
-  getActorName,
-  requireSession,
-  setActorName,
-  setSessionCookie,
-} from "@/lib/auth";
+import { getActorName, requireSession } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { TaskPriority, TaskStatus } from "@/lib/types";
-
-// ---------- auth ----------
-
-export async function login(formData: FormData) {
-  const password = String(formData.get("password") ?? "");
-  const name = String(formData.get("name") ?? "").trim();
-  const next = String(formData.get("next") ?? "/");
-
-  if (!checkPassword(password)) {
-    redirect(`/login?error=1&next=${encodeURIComponent(next)}`);
-  }
-
-  await setSessionCookie();
-  if (name) await setActorName(name);
-  redirect(next || "/");
-}
-
-export async function signOut() {
-  await clearSessionCookie();
-  redirect("/login");
-}
 
 // ---------- activity log ----------
 

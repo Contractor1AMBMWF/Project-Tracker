@@ -35,18 +35,13 @@ export async function hasValidSession() {
   return !!value && value === expectedSessionValue();
 }
 
-// Throws if called from a server action without a valid session cookie.
-// Every mutating action calls this first so writes can't happen without
-// the shared password, even if a form is POSTed directly.
-export async function requireSession() {
-  if (!(await hasValidSession())) {
-    throw new Error("Not authorized");
-  }
-}
+// Sign-in is switched off, so writes are open to anyone with the link.
+// Actions still call this, which keeps one place to turn the check back on.
+export async function requireSession() {}
 
 export async function getActorName() {
   const store = await cookies();
-  return store.get(NAME_COOKIE)?.value || "Someone";
+  return store.get(NAME_COOKIE)?.value || "Mela";
 }
 
 export async function setActorName(name: string) {
