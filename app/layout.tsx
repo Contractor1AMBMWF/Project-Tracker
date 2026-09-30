@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My Tracker Ambassador",
+  title: "My Projects Ambassador",
   description: "Internal project and task tracker for Ambassador.",
 };
 

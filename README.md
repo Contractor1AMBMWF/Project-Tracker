@@ -1,4 +1,4 @@
-# Ambassador Project Tracker
+# My Projects Ambassador
 
 Simple internal project and task tracker for Ambassador. A stripped-down
 sibling of the EDUK8U tracker: no per-user login, no sprints, no AI chatbot,

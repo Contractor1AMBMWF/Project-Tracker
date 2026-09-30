@@ -25,7 +25,7 @@ export default async function Sidebar() {
         </span>
         <span className="min-w-0 leading-tight">
           <span className="block truncate font-display text-sm font-extrabold tracking-tight text-white">
-            My Tracker Ambassador
+            My Projects Ambassador
           </span>
           <span className="block truncate text-[10px] font-semibold uppercase tracking-wider text-slate-400">
             Ambassador Mid-West Floor

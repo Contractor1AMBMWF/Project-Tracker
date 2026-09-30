@@ -16,7 +16,7 @@ export default async function LoginPage({
         <div className="flex items-center gap-2.5">
           <Logo className="h-8 w-8 shrink-0" />
           <div className="leading-tight">
-            <p className="text-sm font-semibold text-navy">My Tracker Ambassador</p>
+            <p className="text-sm font-semibold text-navy">My Projects Ambassador</p>
             <p className="text-[10px] uppercase tracking-wider text-slate-400">Ambassador Mid-West Floor</p>
           </div>
         </div>
