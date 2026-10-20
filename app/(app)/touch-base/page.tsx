@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { CheckCircle2, ChevronRight, ListTodo, HelpCircle } from "lucide-react";
 import { createReadClient } from "@/lib/supabase/read";
-import { Card, FieldLabel, PageHeader } from "@/components/ui/Card";
-import { Dot } from "@/components/ui/Badge";
+import { Card, FieldLabel, PageHeader, SectionHeader } from "@/components/ui/Card";
+import { Avatar, StatusIcon, StatusLabel } from "@/components/ui/Marks";
 import { CopySummaryButton, NoteForm, NoteRow, PeriodPicker } from "@/components/TouchBaseClient";
 import { currentPeriod, isMeetingKey, periodFor, recentPeriods } from "@/lib/touchbase";
 import { STATUS_META, type ActivityEntry, type Group, type Project, type Task } from "@/lib/types";
@@ -160,32 +160,29 @@ export default async function TouchBasePage({
   if (openInfo.length === 0) lines.push("- None");
 
   return (
-    <div className="px-8 py-6">
+    <>
       <PageHeader
+        eyebrow={`Covers ${period.range}`}
         title="Touch Base"
         description="What got done, what is pending, and what we need, for each Tuesday and Friday call with RJ and Matt."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <PeriodPicker value={period.key} options={periods.map((p) => ({ key: p.key, label: p.label }))} />
-            <CopySummaryButton text={lines.join("\n")} />
-          </div>
-        }
+        kpis={[
+          { label: "Completed", value: doneTasks.length },
+          { label: "Added", value: createdCount },
+          { label: "Updates", value: updatesCount },
+          { label: "Info needed", value: openInfo.length, warn: openInfo.length > 0 },
+        ]}
       />
 
-      <p className="mt-2 text-xs text-ink-400">Covers {period.range}</p>
-
-      <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Stat label="Tasks completed" value={doneTasks.length} accent />
-        <Stat label="Tasks added" value={createdCount} />
-        <Stat label="Updates posted" value={updatesCount} />
-        <Stat label="Info needed" value={openInfo.length} danger={openInfo.length > 0} />
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <PeriodPicker value={period.key} options={periods.map((p) => ({ key: p.key, label: p.label }))} />
+        <CopySummaryButton text={lines.join("\n")} />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
         <Card>
-          <SectionTitle icon={<CheckCircle2 size={17} className="text-accent-green" />} title="Done since last call" />
+          <SectionHeader icon={<CheckCircle2 size={16} className="text-accent-green" />} title="Done since last call" count={doneTasks.length + doneNotes.length} />
           {doneTasks.length === 0 && doneNotes.length === 0 && (
-            <p className="mt-3 text-xs italic text-ink-400">No tasks completed in this period yet.</p>
+            <p className="mt-1 text-[13px] text-ink-400">No tasks completed in this period yet.</p>
           )}
           <div className="mt-3 space-y-2">
             {[...new Set<string | null>([...groupByProject(doneTasks).map(([pid]) => pid), ...notesByProject(doneNotes).map(([pid]) => pid)])].map((pid) => {
@@ -199,13 +196,17 @@ export default async function TouchBasePage({
                       <ul className="mt-1 space-y-1">
                         {items.map((t) => (
                           <li key={t.id} className="flex items-start gap-2 text-sm text-ink-700">
-                            <span className="mt-1.5">
-                              <Dot color={STATUS_META.done.color} />
+                            <span className="mt-0.5">
+                              <StatusIcon status="done" />
                             </span>
-                            <Link href={`/tasks/${t.id}`} className="hover:text-brand">
+                            <Link href={`/tasks/${t.id}`} className="font-semibold hover:text-brand-dark">
                               {t.title}
                             </Link>
-                            {t.assignee && <span className="ml-auto shrink-0 text-xs text-ink-400">{t.assignee}</span>}
+                            {t.assignee && (
+                              <span className="ml-auto shrink-0">
+                                <Avatar name={t.assignee} size={20} />
+                              </span>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -227,10 +228,14 @@ export default async function TouchBasePage({
         </Card>
 
         <Card>
-          <SectionTitle icon={<HelpCircle size={17} className="text-brand" />} title="Info needed from RJ and Matt" />
-          <p className="text-xs text-ink-400">Stays on every call until marked resolved.</p>
-          <div className="mt-3 space-y-1.5">
-            {infoNotes.length === 0 && <p className="text-xs italic text-ink-400">Nothing waiting on them right now.</p>}
+          <SectionHeader
+            icon={<HelpCircle size={16} className="text-brand" />}
+            title="Info needed from RJ and Matt"
+            count={openInfo.length}
+            hint="Stays on every call until marked resolved."
+          />
+          <div className="mt-3 space-y-2">
+            {infoNotes.length === 0 && <p className="text-[13px] text-ink-400">Nothing waiting on them right now.</p>}
             {notesByProject(infoNotes).map(([pid, list]) => (
               <ProjectFold key={pid ?? "general"} name={pid ? projectName.get(pid) ?? "Project" : "General"} count={list.filter((n) => !n.resolved).length}>
                 <div className="mt-2 space-y-1.5">
@@ -253,10 +258,12 @@ export default async function TouchBasePage({
       </div>
 
       <Card className="mt-4">
-        <SectionTitle icon={<ListTodo size={17} className="text-accent-blue" />} title="Pending action items" />
-        <p className="text-xs text-ink-400">
-          Open tasks that are in progress, stuck, or high priority. Manual items carry forward until resolved.
-        </p>
+        <SectionHeader
+          icon={<ListTodo size={16} className="text-accent-blue" />}
+          title="Pending action items"
+          count={pendingTasks.length + actionNotes.filter((n) => !n.resolved).length}
+          hint="Open tasks that are in progress, stuck, or high priority. Manual items carry forward until resolved."
+        />
 
         {actionNotes.length > 0 && (
           <div className="mt-3 space-y-1.5">
@@ -267,77 +274,51 @@ export default async function TouchBasePage({
         )}
         <NoteForm periodKey={period.key} kind="action" placeholder="Add an action item from the call" />
 
-        <div className="mt-4 overflow-x-auto rounded-card border border-ink-200">
-          <div className="flex min-w-max border-b border-ink-200 bg-ink-50 text-label uppercase text-ink-400">
-            <div className="min-w-[260px] flex-1 px-4 py-2">Task</div>
+        <div className="mt-4 overflow-x-auto">
+          <div className="flex min-w-max text-xs font-semibold text-ink-400">
+            <div className="min-w-[260px] flex-1 py-2">Task</div>
             <div className="w-44 px-2 py-2">Project</div>
-            <div className="w-32 px-2 py-2 text-center">Assignee</div>
-            <div className="w-36 px-2 py-2 text-center">Status</div>
+            <div className="w-36 px-2 py-2">Owner</div>
+            <div className="w-36 px-2 py-2">Status</div>
           </div>
-          {pendingTasks.length === 0 && <p className="px-4 py-3 text-sm text-ink-400">No open items right now.</p>}
+          {pendingTasks.length === 0 && <p className="py-3 text-[13px] text-ink-400">No open items right now.</p>}
           {pendingTasks.map((t) => {
             return (
-              <div key={t.id} className="flex min-w-max items-center border-t border-ink-100 text-sm first:border-t-0">
-                <div className="min-w-[260px] flex-1 px-4 py-2">
-                  <Link href={`/tasks/${t.id}`} className="font-medium text-ink-800 hover:text-brand">
+              <div key={t.id} className="flex min-w-max items-center border-t border-ink-200 text-[13.5px]">
+                <div className="min-w-[260px] flex-1 py-2.5">
+                  <Link href={`/tasks/${t.id}`} className="font-semibold text-ink-900 hover:text-brand-dark">
                     {t.title}
                   </Link>
                 </div>
-                <div className="w-44 truncate px-2 py-2 text-xs">
-                  <Link href={`/projects/${t.project_id}`} className="text-brand hover:underline">
+                <div className="w-44 truncate px-2 py-2.5 text-xs font-bold">
+                  <Link href={`/projects/${t.project_id}`} className="text-ink-600 hover:text-brand-dark">
                     {projectName.get(t.project_id) ?? ""}
                   </Link>
                 </div>
-                <div className="w-32 px-2 py-2 text-center text-xs text-ink-600">{t.assignee || "-"}</div>
-                <div className="w-36 px-2 py-2 text-center">
-                  <span
-                    className="inline-block w-full rounded px-2 py-1 text-xs font-semibold text-white"
-                    style={{ background: STATUS_META[t.status].color }}
-                  >
-                    {STATUS_META[t.status].label}
-                  </span>
+                <div className="flex w-36 items-center gap-2 px-2 py-2.5 text-[13px] font-semibold text-ink-600">
+                  <Avatar name={t.assignee} size={22} />
+                  {t.assignee || "No owner"}
+                </div>
+                <div className="w-36 px-2 py-2.5">
+                  <StatusLabel status={t.status} />
                 </div>
               </div>
             );
           })}
         </div>
       </Card>
-    </div>
-  );
-}
-
-function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return (
-    <h2 className="flex items-center gap-2 font-display text-title text-ink-900">
-      {icon}
-      {title}
-    </h2>
-  );
-}
-
-function Stat({ label, value, accent, danger }: { label: string; value: number; accent?: boolean; danger?: boolean }) {
-  return (
-    <Card>
-      <FieldLabel>{label}</FieldLabel>
-      <p
-        className={`mt-1 font-display text-3xl font-extrabold tracking-tight ${
-          danger ? "text-red-500" : accent ? "text-brand" : "text-ink-900"
-        }`}
-      >
-        {value}
-      </p>
-    </Card>
+    </>
   );
 }
 
 // One project's items, folded away until opened so each call starts as a short list.
 function ProjectFold({ name, count, children }: { name: string; count: number; children: React.ReactNode }) {
   return (
-    <details className="group rounded-lg border border-ink-100 px-3 py-2">
+    <details className="group rounded-2xl bg-ink-50 px-3 py-2">
       <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
         <ChevronRight size={15} className="text-ink-400 transition-transform group-open:rotate-90" />
-        <span className="font-display text-sm font-bold text-ink-900">{name}</span>
-        <span className="ml-auto text-xs text-ink-400">{count}</span>
+        <span className="text-sm font-extrabold text-ink-900">{name}</span>
+        <span className="ml-auto text-[13px] font-semibold tabular-nums text-ink-400">{count}</span>
       </summary>
       <div className="pb-1">{children}</div>
     </details>

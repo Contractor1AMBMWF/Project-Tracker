@@ -1,27 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { deleteProject } from "@/app/actions";
 
+// Delete asks for a second click instead of a browser dialog.
 export default function DeleteProjectButton({ projectId }: { projectId: string }) {
+  const [sure, setSure] = useState(false);
   return (
-    <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-400">
-        Danger zone
-      </p>
+    <div className="flex flex-wrap items-center gap-3">
       <button
-        onClick={() => {
-          if (
-            confirm(
-              "Are you sure you want to delete this project?\n\nThis permanently removes the project and ALL its groups and tasks. This cannot be undone."
-            )
-          ) {
-            deleteProject(projectId);
-          }
-        }}
-        className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-500 hover:border-red-400 hover:bg-red-50"
+        onClick={() => (sure ? deleteProject(projectId) : setSure(true))}
+        onBlur={() => setSure(false)}
+        className="text-sm font-bold text-late hover:underline"
       >
-        Delete this project
+        {sure ? "Click again to delete this project" : "Delete this project"}
       </button>
+      {sure && (
+        <span className="text-[13px] text-ink-400">Removes all its groups and tasks. This can&apos;t be undone.</span>
+      )}
     </div>
   );
 }

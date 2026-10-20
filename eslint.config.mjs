@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design reference app, kept outside this build:
+    "newUI/**",
   ]),
 ]);
 

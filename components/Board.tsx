@@ -1,15 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Eye, EyeOff, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import TaskRow from "@/components/TaskRow";
 import AddTaskRow from "@/components/AddTaskRow";
 import GroupHeader from "@/components/GroupHeader";
 import { Button } from "@/components/ui/Button";
+import { useStoredFlag, useStoredString } from "@/lib/useStoredState";
 import type { Group, Task } from "@/lib/types";
 
 const STORAGE_KEY = "ambtracker:hideDone";
 const collapseKey = (projectId: string) => `ambtracker:collapsed:${projectId}`;
+
+function parseIds(raw: string) {
+  try {
+    return new Set(JSON.parse(raw) as string[]);
+  } catch {
+    return new Set<string>();
+  }
+}
 
 export default function Board({
   projectId,
@@ -20,57 +28,38 @@ export default function Board({
   groups: Group[];
   tasks: Task[];
 }) {
-  const [hideDone, setHideDone] = useState(false);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    setHideDone(localStorage.getItem(STORAGE_KEY) === "1");
-    try {
-      const raw = localStorage.getItem(collapseKey(projectId));
-      if (raw) setCollapsed(new Set(JSON.parse(raw) as string[]));
-    } catch {
-      // start expanded
-    }
-  }, [projectId]);
+  const [hideDone, setHideDone] = useStoredFlag(STORAGE_KEY);
+  const [collapsedRaw, setCollapsedRaw] = useStoredString(collapseKey(projectId), "[]");
+  const collapsed = parseIds(collapsedRaw);
+  const setCollapsed = (next: Set<string>) => setCollapsedRaw(JSON.stringify([...next]));
 
   function toggleGroup(groupId: string) {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupId)) next.delete(groupId);
-      else next.add(groupId);
-      localStorage.setItem(collapseKey(projectId), JSON.stringify([...next]));
-      return next;
-    });
+    const next = new Set(collapsed);
+    if (next.has(groupId)) next.delete(groupId);
+    else next.add(groupId);
+    setCollapsed(next);
   }
 
   const allCollapsed = groups.length > 0 && groups.every((g) => collapsed.has(g.id));
 
   function toggleAll() {
-    const next = allCollapsed ? new Set<string>() : new Set(groups.map((g) => g.id));
-    setCollapsed(next);
-    localStorage.setItem(collapseKey(projectId), JSON.stringify([...next]));
+    setCollapsed(allCollapsed ? new Set<string>() : new Set(groups.map((g) => g.id)));
   }
 
-  function toggleHideDone() {
-    setHideDone((prev) => {
-      const next = !prev;
-      localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
-      return next;
-    });
-  }
+  const toggleHideDone = () => setHideDone(!hideDone);
 
   const doneCount = tasks.filter((t) => t.status === "done").length;
 
   if (groups.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-ink-300 bg-white p-10 text-center text-ink-500">
+      <div className="rounded-card border-2 border-dashed border-ink-300 p-10 text-center text-ink-400">
         No groups yet. Add a group below to start adding tasks.
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {(doneCount > 0 || groups.length > 1) && (
         <div className="flex justify-end gap-2">
           {groups.length > 1 && (
@@ -96,7 +85,7 @@ export default function Board({
         const groupDone = groupTasks.filter((t) => t.status === "done").length;
 
         return (
-          <section key={group.id}>
+          <section key={group.id} className="rounded-card bg-white px-1 pb-1.5 pt-3.5">
             <GroupHeader
               group={group}
               projectId={projectId}
@@ -108,30 +97,30 @@ export default function Board({
             {isCollapsed ? (
               <button
                 onClick={() => toggleGroup(group.id)}
-                className="w-full rounded-card border border-dashed border-ink-200 bg-white/60 px-4 py-2 text-left text-xs text-ink-400 transition-colors hover:border-ink-300 hover:text-ink-600"
+                className="mx-3.5 mb-2 text-left text-[13px] font-semibold text-ink-400 hover:text-ink-900"
               >
                 {groupTasks.length} task{groupTasks.length === 1 ? "" : "s"} hidden, click to expand
               </button>
             ) : (
-              <div className="overflow-x-auto rounded-card border border-ink-200 bg-white shadow-card">
-                <div className="flex min-w-max border-b border-ink-200 bg-ink-50 text-label uppercase text-ink-400">
-                  <div className="min-w-[220px] flex-1 px-4 py-2">Task</div>
-                  <div className="w-36 px-2 py-2 text-center">Assignee</div>
-                  <div className="w-44 px-2 py-2 text-center">Status</div>
-                  <div className="w-28 px-2 py-2 text-center">Priority</div>
-                  <div className="w-20 px-2 py-2" />
+              <div className="overflow-x-auto">
+                <div className="hidden min-w-max text-xs font-semibold text-ink-400 md:flex">
+                  <div className="min-w-[260px] flex-1 px-3.5 py-2">Task</div>
+                  <div className="w-36 px-2 py-2">Owner</div>
+                  <div className="w-40 px-2 py-2">Status</div>
+                  <div className="w-32 px-2 py-2">Priority</div>
+                  <div className="w-24 px-2 py-2" />
                 </div>
 
                 {visible.map((task) => (
-                  <TaskRow key={task.id} task={task} projectId={projectId} accent={group.color} />
+                  <TaskRow key={task.id} task={task} projectId={projectId} />
                 ))}
 
                 {hidden > 0 && (
                   <button
                     onClick={toggleHideDone}
-                    className="w-full border-t border-ink-200 px-4 py-2 text-left text-xs text-ink-400 transition-colors hover:bg-ink-50 hover:text-ink-600"
+                    className="w-full border-t border-ink-200 px-3.5 py-2 text-left text-[13px] font-semibold text-ink-400 hover:text-ink-900"
                   >
-                    {hidden} done task{hidden === 1 ? "" : "s"} hidden — show
+                    {hidden} done task{hidden === 1 ? "" : "s"} hidden. Show
                   </button>
                 )}
 

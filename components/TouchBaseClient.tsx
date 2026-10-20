@@ -18,7 +18,7 @@ export function PeriodPicker({
     <select
       value={value}
       onChange={(e) => router.push(`/touch-base?key=${e.target.value}`)}
-      className="h-10 rounded-lg border border-ink-200 bg-white px-3 text-sm font-semibold text-ink-700 shadow-card focus:border-brand focus:outline-none"
+      className="h-10 rounded-full border-0 bg-white px-4 text-[13px] font-semibold text-ink-900 shadow-card focus:outline-none focus:ring-2 focus:ring-brand"
     >
       {options.map((o, i) => (
         <option key={o.key} value={o.key}>
@@ -58,7 +58,7 @@ export function NoteForm({
         <select
           value={audience}
           onChange={(e) => setAudience(e.target.value)}
-          className="rounded-lg border border-ink-300 bg-white px-2 text-sm text-ink-700 focus:border-brand focus:outline-none"
+          className="rounded-full border-0 bg-ink-100 px-3 text-[13px] font-semibold text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand"
         >
           <option value="RJ">RJ</option>
           <option value="Matt">Matt</option>
@@ -75,9 +75,9 @@ export function NoteForm({
           }
         }}
         placeholder={placeholder}
-        className="min-w-0 flex-1 rounded-lg border border-ink-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+        className="min-w-0 flex-1 rounded-full bg-ink-100 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
       />
-      <Button size="sm" onClick={submit} disabled={pending || !body.trim()} className="h-auto">
+      <Button onClick={submit} disabled={pending || !body.trim()}>
         Add
       </Button>
     </div>
@@ -110,7 +110,7 @@ export function NoteRow({
     startTransition(() => addTouchBaseAnswer(id, text));
   }
   return (
-    <div className="rounded-lg border border-ink-200 bg-ink-50">
+    <div className="rounded-xl bg-white">
     <div className="group flex items-start gap-2 px-3 py-2 text-sm">
       {resolvable && (
         <button
@@ -133,7 +133,7 @@ export function NoteRow({
         <button
           onClick={() => startTransition(() => setTouchBaseNoteResolved(id, false))}
           title="Reopen"
-          className="rounded p-1 text-ink-300 opacity-0 transition hover:text-ink-600 group-hover:opacity-100"
+          className="rounded-full p-1 text-ink-300 opacity-0 transition hover:text-ink-900 group-hover:opacity-100 focus:opacity-100"
         >
           <Undo2 size={13} />
         </button>
@@ -143,7 +143,7 @@ export function NoteRow({
           if (confirm("Delete this item?")) startTransition(() => deleteTouchBaseNote(id));
         }}
         title="Delete"
-        className="rounded p-1 text-ink-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+        className="rounded-full p-1 text-ink-300 opacity-0 transition hover:bg-red-50 hover:text-late group-hover:opacity-100 focus:opacity-100"
       >
         <Trash2 size={13} />
       </button>
@@ -151,7 +151,7 @@ export function NoteRow({
     {answers && (
       <div className="space-y-1.5 px-3 pb-2 pl-9">
         {answers.map((a) => (
-          <div key={a.id} className="group flex items-start gap-2 rounded-md border-l-2 border-brand bg-white px-2.5 py-1.5 text-sm">
+          <div key={a.id} className="group flex items-start gap-2 rounded-xl bg-brand-soft px-2.5 py-1.5 text-sm">
             <div className="min-w-0 flex-1">
               <p className="whitespace-pre-wrap text-ink-700">
                 <Rich text={a.body} />
@@ -163,7 +163,7 @@ export function NoteRow({
                 if (confirm("Delete this answer?")) startTransition(() => deleteTouchBaseNote(a.id));
               }}
               title="Delete answer"
-              className="rounded p-1 text-ink-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+              className="rounded-full p-1 text-ink-300 opacity-0 transition hover:bg-red-50 hover:text-late group-hover:opacity-100 focus:opacity-100"
             >
               <Trash2 size={13} />
             </button>
@@ -181,7 +181,7 @@ export function NoteRow({
               }}
               rows={3}
               placeholder="Type the answer"
-              className="w-full rounded-lg border border-ink-300 bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className="w-full rounded-xl bg-ink-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
             <div className="flex gap-2">
               <Button size="sm" onClick={saveReply} disabled={!reply.trim()}>
@@ -195,7 +195,7 @@ export function NoteRow({
         ) : (
           <button
             onClick={() => setAnswering(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-ink-500 hover:text-brand"
+            className="flex items-center gap-1.5 text-xs font-bold text-ink-400 hover:text-brand-dark"
           >
             <MessageSquare size={13} />
             Answer

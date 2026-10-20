@@ -19,10 +19,8 @@ export default function ProjectDescription({
   }
 
   return (
-    <div className="mt-2 max-w-2xl">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-400">
-        Project Description
-      </span>
+    <div className="max-w-3xl">
+      <span className="text-label text-ink-400">Description</span>
       {editing ? (
         <textarea
           autoFocus
@@ -31,17 +29,17 @@ export default function ProjectDescription({
           onChange={(e) => setValue(e.target.value)}
           onBlur={save}
           placeholder="What is this project for?"
-          className="mt-1 w-full resize-y rounded-lg border border-ink-300 px-3 py-2 text-sm text-ink-700 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+          className="mt-1 w-full resize-y rounded-xl bg-ink-100 px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand"
         />
       ) : (
         <p
           onClick={() => setEditing(true)}
-          className={`mt-1 cursor-text whitespace-pre-wrap rounded-lg border border-transparent px-2 py-1.5 text-sm hover:border-ink-200 hover:bg-ink-50 ${
-            value ? "text-ink-700" : "italic text-ink-400"
+          className={`-mx-2 mt-0.5 cursor-text whitespace-pre-wrap rounded-xl px-2 py-1 text-sm hover:bg-ink-100 ${
+            value ? "text-ink-700" : "text-ink-400"
           }`}
           title="Click to edit description"
         >
-          {value || "Click to add a description… (what is this project for?)"}
+          {value || "Add a description: what is this project for?"}
         </p>
       )}
     </div>

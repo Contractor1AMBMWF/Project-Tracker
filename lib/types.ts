@@ -64,16 +64,24 @@ export interface ActivityEntry {
 }
 
 export const STATUS_META: Record<TaskStatus, { label: string; color: string }> = {
-  not_started: { label: "Not Started", color: "#94a3b8" },
-  working_on_it: { label: "Working on it", color: "#eab308" },
-  stuck: { label: "Stuck", color: "#ef4444" },
-  done: { label: "Done", color: "#22c55e" },
+  not_started: { label: "Not started", color: "#9a9cb0" },
+  working_on_it: { label: "Working on it", color: "#e59a00" },
+  stuck: { label: "Stuck", color: "#D93A2B" },
+  done: { label: "Done", color: "#00a874" },
+};
+
+// Board card fill and text colour per status.
+export const STATUS_CARD: Record<TaskStatus, { bg: string; fg: string; light?: boolean }> = {
+  not_started: { bg: "#ffffff", fg: "#161616" },
+  working_on_it: { bg: "#F2C14E", fg: "#2b2100" },
+  stuck: { bg: "#E8622C", fg: "#ffffff", light: true },
+  done: { bg: "#1a2740", fg: "#ffffff", light: true },
 };
 
 export const STATUS_ORDER: TaskStatus[] = ["not_started", "working_on_it", "stuck", "done"];
 
 export const PRIORITY_META: Record<TaskPriority, { label: string; color: string }> = {
-  low: { label: "Low", color: "#64748b" },
-  medium: { label: "Medium", color: "#f59e0b" },
-  high: { label: "High", color: "#ef4444" },
+  low: { label: "Low", color: "#8d8c88" },
+  medium: { label: "Medium", color: "#4a4a48" },
+  high: { label: "High", color: "#E8520A" },
 };

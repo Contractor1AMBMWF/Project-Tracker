@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { addTaskUpdate } from "@/app/actions";
+import { Button } from "@/components/ui/Button";
 
 export default function AddUpdateForm({ taskId, projectId }: { taskId: string; projectId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -13,19 +14,14 @@ export default function AddUpdateForm({ taskId, projectId }: { taskId: string; p
   }
 
   return (
-    <form ref={formRef} action={submit} className="mt-3 flex gap-2">
+    <form ref={formRef} action={submit} className="mt-2 flex gap-2">
       <input
         name="body"
         required
-        placeholder="Add an update..."
-        className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+        placeholder="Add an update…"
+        className="min-w-0 flex-1 rounded-full bg-ink-100 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
       />
-      <button
-        type="submit"
-        className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-dark"
-      >
-        Post
-      </button>
+      <Button type="submit">Post</Button>
     </form>
   );
 }

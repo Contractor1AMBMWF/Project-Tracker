@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { User } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { createReadClient } from "@/lib/supabase/read";
 import TaskDetailEditor from "@/components/TaskDetailEditor";
 import AddUpdateForm from "@/components/AddUpdateForm";
-import { STATUS_META, PRIORITY_META } from "@/lib/types";
+import { Card, SectionHeader } from "@/components/ui/Card";
+import { Avatar, PriorityLabel, StatusLabel } from "@/components/ui/Marks";
 import type { Project, Task, TaskUpdate } from "@/lib/types";
 
 export default async function TaskPage({
@@ -31,56 +32,50 @@ export default async function TaskPage({
       .order("created_at", { ascending: false }) as unknown as Promise<{ data: TaskUpdate[] | null }>,
   ]);
 
-  const status = STATUS_META[task.status] ?? STATUS_META.not_started;
-
   return (
-    <div className="px-8 py-6">
-      <Link href={`/projects/${task.project_id}`} className="text-sm text-brand hover:underline">
-        ← {project?.name ?? "Back to project"}
+    <div className="max-w-3xl">
+      <Link
+        href={`/projects/${task.project_id}`}
+        className="inline-flex items-center gap-1.5 text-[13px] font-bold text-brand-dark hover:underline"
+      >
+        <ArrowLeft size={14} />
+        {project?.name ?? "Back to project"}
       </Link>
 
-      <div className="mt-3 rounded-xl border border-ink-200 bg-white p-5">
-        <h1 className="text-xl font-bold text-navy">{task.title}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded px-2 py-1 font-semibold text-white" style={{ background: status.color }}>
-            {status.label}
-          </span>
-          {task.priority && (
-            <span
-              className="rounded px-2 py-1 font-semibold text-white"
-              style={{ background: PRIORITY_META[task.priority].color }}
-            >
-              {PRIORITY_META[task.priority].label} priority
-            </span>
-          )}
-          <span className="flex items-center gap-1 rounded bg-ink-100 px-2 py-1 text-ink-600">
-            <User size={13} />
-            {task.assignee || "Unassigned"}
-          </span>
-        </div>
+      <h1 className="mt-2 text-display text-ink-900">{task.title}</h1>
+      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <StatusLabel status={task.status} />
+        <PriorityLabel priority={task.priority} />
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-ink-600">
+          <Avatar name={task.assignee} size={22} />
+          {task.assignee || "No owner"}
+        </span>
       </div>
 
       <TaskDetailEditor task={task} />
 
-      <div className="mt-6 max-w-2xl">
-        <h2 className="mb-3 font-display text-label uppercase text-ink-500">Updates &amp; history</h2>
+      <Card className="mt-4">
+        <SectionHeader title="Updates" count={updates?.length ?? 0} />
         <AddUpdateForm taskId={task.id} projectId={task.project_id} />
 
-        <div className="mt-4 space-y-3">
+        <ul className="m-0 mt-3 list-none p-0">
           {(updates ?? []).map((u) => (
-            <div key={u.id} className="rounded-lg border border-ink-200 bg-white p-3 text-sm">
-              <div className="flex items-baseline justify-between">
-                <span className="font-medium text-navy">{u.author ?? "Someone"}</span>
-                <span className="text-xs text-ink-400">{new Date(u.created_at).toLocaleString()}</span>
+            <li key={u.id} className="flex gap-3 border-t border-ink-200 py-3 text-sm">
+              <Avatar name={u.author ?? "Someone"} size={28} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <span className="font-bold">{u.author ?? "Someone"}</span>
+                  <time className="text-xs text-ink-400">
+                    {new Date(u.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                  </time>
+                </div>
+                <p className="m-0 mt-0.5 whitespace-pre-wrap text-ink-700">{u.body}</p>
               </div>
-              <p className="mt-1 whitespace-pre-wrap text-ink-700">{u.body}</p>
-            </div>
+            </li>
           ))}
-          {(!updates || updates.length === 0) && (
-            <p className="text-sm text-ink-400">No updates yet.</p>
-          )}
-        </div>
-      </div>
+          {(!updates || updates.length === 0) && <p className="mt-2 text-[13px] text-ink-400">No updates yet.</p>}
+        </ul>
+      </Card>
     </div>
   );
 }

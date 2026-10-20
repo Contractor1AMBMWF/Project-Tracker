@@ -1,14 +1,14 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { createGroup } from "@/app/actions";
+import { Button } from "@/components/ui/Button";
 
 export default function AddGroupButton({ projectId }: { projectId: string }) {
   return (
-    <button
-      onClick={() => createGroup(projectId, "New Group")}
-      className="rounded-lg border border-ink-300 bg-white px-4 py-2 text-sm font-medium text-ink-600 hover:border-brand hover:text-brand"
-    >
-      + Add group
-    </button>
+    <Button variant="secondary" onClick={() => createGroup(projectId, "New Group")}>
+      <Plus size={15} />
+      Add group
+    </Button>
   );
 }

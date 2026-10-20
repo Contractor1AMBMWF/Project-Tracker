@@ -1,22 +1,28 @@
 @import "tailwindcss";
 
+/* Calm, tool-like look: soft canvas, white rounded panels, one accent
+   (Ambassador orange), navy for dark UI. Colour carries meaning (status),
+   not decoration. See DESIGN.md in newUI/Board App Starter for the rules. */
 :root {
-  --background: #f6f7fb;
-  --foreground: #323338;
+  --canvas: #f2ede8;
+  --canvas2: #f8f6f3;
+  --background: var(--canvas2);
+  --foreground: #161a24;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-display: var(--font-geist-sans);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-body);
 
-  /* Ambassador palette (matching the EDUK8U design system) */
+  /* The one accent: selected tab, primary buttons, active dock item, focus. */
   --color-brand: #E8520A;
-  --color-brand-dark: #c9430a;
-  --color-brand-soft: #fff3ec;
+  --color-brand-dark: #c4440a;
+  --color-brand-soft: #fff0e6;
   --color-brand-border: #fbd9c6;
 
+  /* Dark UI: side dock, Done cards, primary text. */
   --color-navy: #1a2740;
   --color-navy-800: #243454;
   --color-navy-panel: #2a3a5c;
@@ -24,49 +30,58 @@
   --color-accent-blue: #378ADD;
   --color-accent-green: #1D9E75;
 
-  --color-ink-50: #f7f8fa;
-  --color-ink-100: #eef0f4;
-  --color-ink-200: #e2e5ec;
-  --color-ink-300: #c9cfda;
-  --color-ink-400: #98a1b3;
-  --color-ink-500: #6b7488;
-  --color-ink-600: #4d5566;
-  --color-ink-700: #363d4d;
-  --color-ink-900: #1c2130;
+  /* Board card fills per status. */
+  --color-mustard: #F2C14E;
+  --color-sky: #BFE3EE;
+  --color-forest: #2F5D50;
+  --color-flame: #E8622C;
+  --color-late: #D93A2B;
 
-  /* Whole scale runs ~1px larger than Tailwind's default. */
-  --text-xs: 0.8125rem;
+  /* Warm greys. */
+  --color-ink-50: #faf9f7;
+  --color-ink-100: #f4f3f0;
+  --color-ink-200: #e7e5e0;
+  --color-ink-300: #d5d3cd;
+  --color-ink-400: #8d8c88;
+  --color-ink-500: #6f6e6a;
+  --color-ink-600: #4a4a48;
+  --color-ink-700: #33332f;
+  --color-ink-800: #22221f;
+  --color-ink-900: #161616;
+
+  --text-xs: 0.78rem;
   --text-xs--line-height: 1.125rem;
-  --text-sm: 0.9375rem;
-  --text-sm--line-height: 1.375rem;
-  --text-base: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.35rem;
+  --text-base: 0.95rem;
   --text-base--line-height: 1.5rem;
-  --text-lg: 1.125rem;
-  --text-lg--line-height: 1.625rem;
-  --text-xl: 1.3125rem;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.6rem;
+  --text-xl: 1.25rem;
   --text-xl--line-height: 1.75rem;
-  --text-2xl: 1.625rem;
+  --text-2xl: 1.5rem;
   --text-2xl--line-height: 2rem;
-  --text-3xl: 2rem;
-  --text-3xl--line-height: 2.375rem;
-  --text-display: 2rem;
-  --text-display--line-height: 2.375rem;
-  --text-display--letter-spacing: -0.02em;
+  --text-3xl: 1.75rem;
+  --text-3xl--line-height: 2.2rem;
+  /* Page titles: 34px / 800 / tight. */
+  --text-display: 2.125rem;
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.025em;
   --text-display--font-weight: 800;
-  --text-title: 1.1875rem;
-  --text-title--line-height: 1.625rem;
-  --text-title--letter-spacing: -0.01em;
+  /* Section titles: 15px / 700. */
+  --text-title: 0.9375rem;
+  --text-title--line-height: 1.4rem;
   --text-title--font-weight: 700;
-  --text-label: 0.75rem;
-  --text-label--line-height: 1rem;
-  --text-label--letter-spacing: 0.05em;
-  --text-label--font-weight: 700;
+  /* Small sentence-case labels. Never uppercase. */
+  --text-label: 0.78rem;
+  --text-label--line-height: 1.1rem;
+  --text-label--font-weight: 600;
 
-  --radius-card: 0.625rem;
+  --radius-card: 1.125rem;
 
-  --shadow-card: 0 1px 2px rgba(28,33,48,0.04), 0 1px 3px rgba(28,33,48,0.06);
-  --shadow-raised: 0 2px 4px rgba(28,33,48,0.04), 0 4px 12px rgba(28,33,48,0.08);
-  --shadow-overlay: 0 8px 16px rgba(28,33,48,0.08), 0 24px 48px rgba(28,33,48,0.16);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-raised: 0 4px 14px rgba(0,0,0,0.07);
+  --shadow-overlay: 0 20px 60px rgba(0,0,0,0.25);
 
   --animate-grow: grow 0.7s cubic-bezier(0.22,1,0.36,1) both;
   --animate-fade-up: fade-up 0.3s cubic-bezier(0.22,1,0.36,1) both;
@@ -90,11 +105,17 @@ body {
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: linear-gradient(180deg, var(--canvas), var(--canvas2) 420px) fixed;
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

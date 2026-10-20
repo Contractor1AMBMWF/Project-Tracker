@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Trash2, ArrowUpRight } from "lucide-react";
 import { applyTaskPatch, deleteTask } from "@/app/actions";
 import { Button } from "@/components/ui/Button";
+import { PriorityIcon, StatusIcon } from "@/components/ui/Marks";
 import {
   STATUS_META,
   STATUS_ORDER,
@@ -13,8 +14,6 @@ import {
   type Task,
   type TaskStatus,
 } from "@/lib/types";
-
-const COLS = { assignee: 144, status: 176, priority: 112, actions: 80 };
 
 function AutoTextarea({
   value,
@@ -58,11 +57,9 @@ function AutoTextarea({
 export default function TaskRow({
   task,
   projectId,
-  accent,
 }: {
   task: Task;
   projectId: string;
-  accent: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState(task.title);
@@ -96,54 +93,59 @@ export default function TaskRow({
 
   if (deleted) return null;
 
-  const editStatusMeta = STATUS_META[statusVal] ?? STATUS_META.not_started;
+  const selectCls =
+    "w-full cursor-pointer appearance-none rounded-lg bg-transparent py-1.5 pl-7 pr-2 text-[13px] font-semibold text-ink-600 hover:bg-ink-100 focus:bg-ink-100 focus:outline-none";
 
   return (
-    <div style={{ borderLeft: `3px solid ${accent}` }}>
-      <div className="flex items-start border-t border-ink-200 text-sm min-w-max">
-        {/* Title */}
-        <div className="flex-1 min-w-[200px] px-4 py-2.5">
-          <AutoTextarea
-            value={title}
-            onChange={setTitle}
-            onEnter={saveAll}
-            className="w-full bg-transparent font-medium text-ink-800 focus:outline-none leading-snug"
-          />
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <Link
-              href={`/tasks/${task.id}`}
-              className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-brand transition-colors hover:text-brand-dark hover:underline"
-            >
-              Details
-              <ArrowUpRight size={11} />
-            </Link>
-          </div>
-        </div>
+    <div
+      className={`grid grid-cols-[1fr_auto] items-start gap-x-2 border-t border-ink-200 px-3.5 py-2 text-[13.5px] hover:bg-ink-50 md:flex md:min-w-max md:gap-0 md:px-0 md:py-0 ${
+        statusVal === "done" ? "text-ink-400" : ""
+      }`}
+    >
+      {/* Title */}
+      <div className="col-span-2 min-w-0 md:min-w-[260px] md:flex-1 md:px-3.5 md:py-2.5">
+        <AutoTextarea
+          value={title}
+          onChange={setTitle}
+          onEnter={saveAll}
+          className={`w-full bg-transparent font-semibold leading-snug focus:outline-none ${
+            statusVal === "done" ? "text-ink-400 line-through" : "text-ink-900"
+          }`}
+        />
+        <Link
+          href={`/tasks/${task.id}`}
+          className="inline-flex items-center gap-0.5 text-[11.5px] font-bold text-ink-400 transition-colors hover:text-brand-dark"
+        >
+          Details
+          <ArrowUpRight size={11} />
+        </Link>
+      </div>
 
-        {/* Assignee */}
-        <div className="shrink-0 px-2 py-2 text-center" style={{ width: COLS.assignee }}>
+      <div className="flex min-w-0 flex-wrap items-center gap-x-1 md:contents">
+        {/* Owner */}
+        <div className="w-32 shrink-0 md:w-36 md:px-2 md:py-2">
           <input
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
             onBlur={saveAll}
-            placeholder="Unassigned"
-            className="w-full cursor-text bg-transparent px-1 py-1 text-center text-xs text-ink-600 focus:outline-none"
+            placeholder="No owner"
+            className="w-full cursor-text rounded-lg bg-transparent px-1.5 py-1.5 text-[13px] font-semibold text-ink-600 placeholder:font-normal placeholder:text-ink-400 hover:bg-ink-100 focus:bg-ink-100 focus:outline-none"
           />
         </div>
 
         {/* Status */}
-        <div className="shrink-0 px-2 py-1" style={{ width: COLS.status }}>
+        <div className="relative w-40 shrink-0 md:px-2 md:py-2">
+          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 md:left-4">
+            <StatusIcon status={statusVal} />
+          </span>
           <select
             value={statusVal}
-            onChange={(e) => {
-              setStatusVal(e.target.value as TaskStatus);
-            }}
+            onChange={(e) => setStatusVal(e.target.value as TaskStatus)}
             onBlur={saveAll}
-            className="w-full cursor-pointer rounded px-2 py-1.5 text-center text-xs font-semibold text-white focus:outline-none"
-            style={{ background: editStatusMeta.color }}
+            className={selectCls}
           >
             {STATUS_ORDER.map((s) => (
-              <option key={s} value={s} className="bg-white text-ink-800">
+              <option key={s} value={s}>
                 {STATUS_META[s].label}
               </option>
             ))}
@@ -151,45 +153,40 @@ export default function TaskRow({
         </div>
 
         {/* Priority */}
-        <div className="shrink-0 px-2 py-1" style={{ width: COLS.priority }}>
+        <div className="relative w-32 shrink-0 md:px-2 md:py-2">
+          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 md:left-4">
+            <PriorityIcon priority={(priority || null) as TaskPriority | null} />
+          </span>
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
             onBlur={saveAll}
-            className="w-full cursor-pointer rounded px-2 py-1.5 text-center text-xs font-semibold focus:outline-none"
-            style={
-              priority
-                ? { background: PRIORITY_META[priority as TaskPriority].color, color: "white" }
-                : { color: "#9ca3af" }
-            }
+            className={`${selectCls} ${priority ? "" : "text-ink-400"}`}
           >
-            <option value="" className="bg-white text-ink-800">
-              -
-            </option>
+            <option value="">No priority</option>
             {(Object.keys(PRIORITY_META) as TaskPriority[]).map((p) => (
-              <option key={p} value={p} className="bg-white text-ink-800">
+              <option key={p} value={p}>
                 {PRIORITY_META[p].label}
               </option>
             ))}
           </select>
         </div>
+      </div>
 
-
-        {/* Save + Delete */}
-        <div className="shrink-0 flex items-center justify-end gap-1 px-2 py-2" style={{ width: COLS.actions }}>
-          {dirty && (
-            <Button size="sm" onClick={saveAll} disabled={isPending}>
-              {isPending ? "Saving…" : "Save"}
-            </Button>
-          )}
-          <button
-            onClick={remove}
-            title="Delete task"
-            className="rounded p-1 text-ink-300 transition-colors hover:bg-red-50 hover:text-red-500"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+      {/* Save + Delete */}
+      <div className="row-start-2 flex shrink-0 items-center justify-end gap-1 md:w-24 md:px-2 md:py-2">
+        {dirty && (
+          <Button size="sm" onClick={saveAll} disabled={isPending}>
+            {isPending ? "Saving…" : "Save"}
+          </Button>
+        )}
+        <button
+          onClick={remove}
+          title="Delete task"
+          className="rounded-full p-1.5 text-ink-300 transition-colors hover:bg-red-50 hover:text-late"
+        >
+          <Trash2 size={14} />
+        </button>
       </div>
     </div>
   );

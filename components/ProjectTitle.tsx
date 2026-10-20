@@ -31,18 +31,18 @@ export default function ProjectTitle({ projectId, name }: { projectId: string; n
             setEditing(false);
           }
         }}
-        className="w-full max-w-xl rounded-lg border border-ink-300 px-2 py-1 text-2xl font-bold text-navy focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+        className="-mx-2 w-full max-w-xl rounded-xl bg-white px-2 py-0.5 font-extrabold tracking-tight focus:outline-none focus:ring-2 focus:ring-brand"
       />
     );
   }
 
   return (
-    <h1
+    <span
       onClick={() => setEditing(true)}
-      className="cursor-text rounded-lg border border-transparent px-2 py-1 text-2xl font-bold text-navy hover:border-ink-200 hover:bg-ink-50"
+      className="-mx-2 cursor-text rounded-xl px-2 py-0.5 hover:bg-white/70"
       title="Click to rename project"
     >
       {value}
-    </h1>
+    </span>
   );
 }

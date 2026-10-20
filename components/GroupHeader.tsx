@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { renameGroup, deleteGroup } from "@/app/actions";
+import { Button } from "@/components/ui/Button";
 import type { Group } from "@/lib/types";
 
 export default function GroupHeader({
@@ -19,6 +20,7 @@ export default function GroupHeader({
   summary?: string;
 }) {
   const [name, setName] = useState(group.name);
+  const [sure, setSure] = useState(false);
   const dirty = name.trim() !== "" && name.trim() !== group.name;
 
   function save() {
@@ -26,23 +28,18 @@ export default function GroupHeader({
     renameGroup(group.id, projectId, name.trim());
   }
 
-  function remove() {
-    if (!confirm(`Delete the group "${group.name}" and all its tasks?`)) return;
-    deleteGroup(group.id, projectId);
-  }
-
   return (
-    <div className="mb-1 flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 px-3.5 pb-2">
       {onToggle && (
         <button
           onClick={onToggle}
           title={collapsed ? "Expand" : "Collapse"}
-          className="rounded p-0.5 text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-700"
+          className="rounded-full p-0.5 text-ink-400 transition-colors hover:bg-ink-100 hover:text-ink-900"
         >
           {collapsed ? <ChevronRight size={15} /> : <ChevronDown size={15} />}
         </button>
       )}
-      <span className="inline-block h-4 w-1.5 rounded-full" style={{ background: group.color }} />
+      <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-[3px] ring-white" style={{ background: group.color }} />
 
       <input
         value={name}
@@ -51,24 +48,24 @@ export default function GroupHeader({
           if (e.key === "Enter") save();
         }}
         size={Math.min(Math.max(name.length + 1, 12), 80)}
-        className="max-w-full rounded border border-transparent bg-transparent px-1 py-0.5 text-sm font-bold focus:border-ink-300 focus:bg-white focus:outline-none"
-        style={{ color: group.color }}
+        className="max-w-full rounded-lg bg-transparent px-1 py-0.5 text-base font-extrabold text-ink-900 focus:bg-ink-100 focus:outline-none"
       />
-      {collapsed && summary && <span className="shrink-0 text-xs text-ink-400">{summary}</span>}
+      {summary && <span className="shrink-0 text-[13px] font-semibold text-ink-400">{summary}</span>}
       {dirty && (
-        <button
-          onClick={save}
-          className="rounded-md bg-brand px-2.5 py-1 text-xs font-semibold text-white hover:bg-brand-dark"
-        >
+        <Button size="sm" onClick={save}>
           Save
-        </button>
+        </Button>
       )}
       <button
-        onClick={remove}
-        className="ml-auto rounded p-1 text-ink-300 transition-colors hover:bg-red-50 hover:text-red-500"
+        onClick={() => (sure ? deleteGroup(group.id, projectId) : setSure(true))}
+        onBlur={() => setSure(false)}
+        className={`ml-auto flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold transition-colors ${
+          sure ? "bg-red-50 text-late" : "text-ink-300 hover:bg-red-50 hover:text-late"
+        }`}
         title="Delete group"
       >
         <Trash2 size={14} />
+        {sure && "Click again to delete group and its tasks"}
       </button>
     </div>
   );

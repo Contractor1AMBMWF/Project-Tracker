@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Columns3, Globe, GitBranch } from "lucide-react";
 import { createReadClient } from "@/lib/supabase/read";
 import Board from "@/components/Board";
 import ProjectTitle from "@/components/ProjectTitle";
@@ -6,8 +8,9 @@ import ProjectDescription from "@/components/ProjectDescription";
 import ProjectLinkField from "@/components/ProjectLinkField";
 import AddGroupButton from "@/components/AddGroupButton";
 import DeleteProjectButton from "@/components/DeleteProjectButton";
-import StatusBar from "@/components/StatusBar";
-import { STATUS_ORDER, type TaskStatus } from "@/lib/types";
+import { PageHeader } from "@/components/ui/Card";
+import { buttonClass } from "@/components/ui/Button";
+import { SegBar } from "@/components/ui/SegBar";
 import type { Group, Project, Task } from "@/lib/types";
 
 export default async function ProjectPage({
@@ -27,20 +30,36 @@ export default async function ProjectPage({
   if (!project) notFound();
 
   const allTasks = tasks ?? [];
-  const total = allTasks.length;
-  const countBy = (s: TaskStatus) => allTasks.filter((t) => t.status === s).length;
+  const done = allTasks.filter((t) => t.status === "done").length;
+  const stuck = allTasks.filter((t) => t.status === "stuck").length;
+  const pct = allTasks.length === 0 ? 0 : Math.round((done / allTasks.length) * 100);
 
   return (
-    <div className="px-8 py-6">
-      <div className="flex items-start justify-between gap-6">
-        <div className="min-w-0 flex-1">
-          <ProjectTitle projectId={project.id} name={project.name} />
-          <ProjectDescription projectId={project.id} description={project.description} />
+    <>
+      <PageHeader
+        eyebrow={`Project · ${groups?.length ?? 0} group${groups?.length === 1 ? "" : "s"}`}
+        title={<ProjectTitle projectId={project.id} name={project.name} />}
+        kpis={[
+          { label: "Tasks", value: allTasks.length },
+          { label: "Done", value: `${pct}%` },
+          { label: "Stuck", value: stuck, warn: stuck > 0 },
+        ]}
+        actions={
+          <Link href={`/board?project=${project.id}`} className={buttonClass("secondary")}>
+            <Columns3 size={15} />
+            Board view
+          </Link>
+        }
+      />
+
+      <div className="mb-5 rounded-card bg-white px-[18px] py-4">
+        <ProjectDescription projectId={project.id} description={project.description} />
+        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
           <ProjectLinkField
             projectId={project.id}
             field="website_url"
             label="Website"
-            icon="🌐"
+            icon={<Globe size={13} />}
             placeholder="https://example.com"
             value={project.website_url}
           />
@@ -48,30 +67,22 @@ export default async function ProjectPage({
             projectId={project.id}
             field="repo_url"
             label="Repository"
-            icon="🔗"
+            icon={<GitBranch size={13} />}
             placeholder="https://github.com/org/repo"
             value={project.repo_url}
           />
         </div>
-        <div className="w-64 shrink-0 text-right">
-          <StatusBar counts={STATUS_ORDER.map((s) => ({ status: s, count: countBy(s) }))} total={total} />
-          <p className="mt-2 text-sm text-ink-500">
-            {total} task{total === 1 ? "" : "s"} across {groups?.length ?? 0} group
-            {groups?.length === 1 ? "" : "s"}
-          </p>
-        </div>
+        <SegBar tasks={allTasks} className="mt-4" />
       </div>
 
-      <div className="mt-6">
-        <Board projectId={id} groups={groups ?? []} tasks={allTasks} />
-        <div className="mt-4">
-          <AddGroupButton projectId={id} />
-        </div>
+      <Board projectId={id} groups={groups ?? []} tasks={allTasks} />
+      <div className="mt-4">
+        <AddGroupButton projectId={id} />
       </div>
 
       <div className="mt-16 border-t border-ink-200 pt-6">
         <DeleteProjectButton projectId={project.id} />
       </div>
-    </div>
+    </>
   );
 }
