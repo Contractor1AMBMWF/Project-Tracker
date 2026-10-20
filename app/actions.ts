@@ -87,6 +87,25 @@ export async function updateProject(
   revalidatePath(`/projects/${projectId}`);
 }
 
+// Returns an error message, so the Roadmap can say what to fix.
+export async function setProjectDates(projectId: string, startDate: string | null, endDate: string | null) {
+  await requireSession();
+  if (startDate && endDate && endDate < startDate) return "The end date is before the start date.";
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("projects")
+    .update({ start_date: startDate || null, end_date: endDate || null })
+    .eq("id", projectId);
+  if (error) {
+    return error.message.includes("start_date") || error.message.includes("end_date")
+      ? "Project dates aren't set up yet. Run supabase/migration-v4-project-dates.sql in Supabase."
+      : "Couldn't save the dates. Try again.";
+  }
+  revalidatePath("/roadmap");
+  revalidatePath(`/projects/${projectId}`);
+  return null;
+}
+
 // ---------- groups ----------
 
 export async function createGroup(projectId: string, name: string) {

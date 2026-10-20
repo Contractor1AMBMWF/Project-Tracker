@@ -9,6 +9,7 @@ import {
   Columns3,
   Flag,
   Home,
+  Map as MapIcon,
   type LucideIcon,
 } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -21,6 +22,7 @@ const VIEWS: [string, string, LucideIcon][] = [
   ["/", "Dashboard", Home],
   ["/board", "Board", Columns3],
   ["/projects", "Projects", Flag],
+  ["/roadmap", "Roadmap", MapIcon],
   ["/touch-base", "Touch Base", CalendarCheck],
 ];
 

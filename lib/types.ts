@@ -7,6 +7,9 @@ export interface Project {
   description: string | null;
   repo_url: string | null;
   website_url: string | null;
+  // Roadmap dates (migration-v4). Undefined until that migration runs.
+  start_date?: string | null;
+  end_date?: string | null;
   position: number;
   created_at: string;
 }

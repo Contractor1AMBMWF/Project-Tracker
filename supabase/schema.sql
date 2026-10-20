@@ -17,6 +17,8 @@ create table if not exists public.projects (
   repo_url text,
   website_url text,
   category text,
+  start_date date,
+  end_date date,
   position integer not null default 0,
   created_at timestamptz not null default now()
 );
